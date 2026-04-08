@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Свалка</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --main-color: #2d2d2d;
+            --card-color: #3b3b3b;
+            --text-color: #e0e0e0;
+            --accent-color: #007bff;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin: 0;
+        }
+        #board {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto; /* Для мобильной прокрутки */
+            padding-bottom: 15px; /* Чтобы тень не обрезалась */
+        }
+        .week-column {
+            background-color: var(--main-color);
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 300px;
+            flex-shrink: 0;
+        }
+        .task-card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            border-left: 5px solid var(--accent-color);
+        }
+        .task-card p { margin: 5px 0; }
+        .task-card .task-title { font-weight: bold; }
+        .task-card .task-meta { font-size: 0.8em; opacity: 0.7; }
+
+        /* Кнопка "Добавить" */
+        #addTaskBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        /* Модальное окно */
+        #modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: var(--main-color);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--card-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Свалка</h1>
+    </header>
+
+    <main id="board">
+        <!-- Сюда будут вставляться колонки-недели -->
+    </main>
+
+    <button id="addTaskBtn">+</button>
+
+    <div id="modal" class="hidden">
+        <div class="modal-content">
+            <h2>Новый мусор... то есть, задача</h2>
+            <form id="taskForm">
+                <input type="text" name="Task" placeholder="Что нужно сделать?" required>
+                <input type="text" name="Epic" placeholder="Эпик (например, 'Работа')">
+                <input type="text" name="Category" placeholder="Категория (например, 'Дизайн')">
+                <input type="date" name="Date">
+                <input type="text" name="Level" placeholder="Сложность (1-5)">
+                <input type="text" name="Owner" placeholder="На ком задача? (Я)">
+                <input type="text" name="Color" placeholder="Цвет (hex, например #ff0000)">
+                <div class="modal-buttons">
+                    <button type="button" id="closeModalBtn">Отмена</button>
+                    <button type="submit">Свалить в кучу</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // !!! ВАЖНО !!! ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ИЗ APPS SCRIPT
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyfWIt7IuywK73ETY-K-6kkYKvRYz9GeLHVzX_agy1u0ALBq4JEG-mawj_5FiNvFHCpFw/exec';
+
+        const board = document.getElementById('board');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const modal = document.getElementById('modal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const taskForm = document.getElementById('taskForm');
+
+        // --- ЛОГИКА ОТОБРАЖЕНИЯ ---
+
+        // Функция получения задач
+        async function fetchTasks() {
+            board.innerHTML = '<h2>Загружаю твой хлам...</h2>';
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const tasks = await response.json();
+                renderTasks(tasks);
+            } catch (error) {
+                board.innerHTML = '<h2>Ошибка. Не смог достучаться до твоей таблицы. Проверяй, что натворил.</h2>';
+                console.error('Ошибка при загрузке:', error);
+            }
+        }
+
+        // Функция отрисовки задач
+        function renderTasks(tasks) {
+            board.innerHTML = '';
+            
+            // Простая группировка: просто выводим все в одну колонку "Вся Свалка"
+            // Потом усложним до недель
+            const column = document.createElement('div');
+            column.className = 'week-column';
+            column.innerHTML = '<h3>Вся Свалка</h3>';
+            
+            tasks.forEach(task => {
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                if (task.Color) {
+                    card.style.borderLeftColor = task.Color;
+                }
+                
+                card.innerHTML = `
+                    <p class="task-title">${task.Task}</p>
+                    <p class="task-meta"><strong>Категория:</strong> ${task.Category || '---'}</p>
+                    <p class="task-meta"><strong>Статус:</strong> ${task.Status}</p>
+                    <p class="task-meta"><strong>Дедлайн:</strong> ${task.Date ? new Date(task.Date).toLocaleDateString() : '---'}</p>
+                `;
+                column.appendChild(card);
+            });
+            board.appendChild(column);
+        }
+
+        // --- ЛОГИКА ДОБАВЛЕНИЯ ЗАДАЧ ---
+
+        // Открыть модальное окно
+        addTaskBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        // Закрыть модальное окно
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+        
+        // Отправка формы
+        taskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(taskForm);
+            const taskData = Object.fromEntries(formData.entries());
+            
+            const submitButton = taskForm.querySelector('button[type="submit"]');
+            submitButton.textContent = 'Сваливаю...';
+            submitButton.disabled = true;
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(taskData),
+                });
+                taskForm.reset();
+                modal.classList.add('hidden');
+                fetchTasks(); // Обновляем список
+            } catch (error) {
+                alert('Не удалось добавить задачу. Возможно, я сломался.');
+                console.error('Ошибка при добавлении:', error);
+            } finally {
+                submitButton.textContent = 'Свалить в кучу';
+                submitButton.disabled = false;
+            }
+        });
+
+        // --- ПЕРВЫЙ ЗАПУСК ---
+        fetchTasks();
+    </script>
+
+</body>
+</html>
