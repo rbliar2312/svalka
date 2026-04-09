@@ -10,8 +10,10 @@
             --main-color: #2d2d2d;
             --card-color: #3b3b3b;
             --text-color: #e0e0e0;
-            --accent-color: #007bff;
+            --accent-color: #007bff; /* Базовый акцентный цвет */
             --shadow-color: rgba(0, 0, 0, 0.5);
+            --red-status: #dc3545; /* Для просроченных */
+            --green-status: #28a745; /* Для готовых */
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -19,6 +21,7 @@
             color: var(--text-color);
             margin: 0;
             padding: 20px;
+            overflow-x: hidden; /* Чтобы не было горизонтальной прокрутки, если контент не помещается */
         }
         header {
             text-align: center;
@@ -27,11 +30,38 @@
         h1 {
             margin: 0;
         }
+
+        /* Фильтры и кнопки */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .controls button, .controls select {
+            background-color: var(--card-color);
+            color: var(--text-color);
+            border: 1px solid var(--main-color);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .controls button:hover, .controls select:hover {
+            background-color: var(--main-color);
+        }
+        .controls button.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
         #board {
             display: flex;
             gap: 20px;
             overflow-x: auto; /* Для мобильной прокрутки */
             padding-bottom: 15px; /* Чтобы тень не обрезалась */
+            -webkit-overflow-scrolling: touch; /* Плавная прокрутка на iOS */
         }
         .week-column {
             background-color: var(--main-color);
@@ -39,6 +69,13 @@
             padding: 15px;
             min-width: 300px;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+        .week-column h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            color: var(--text-color);
         }
         .task-card {
             background-color: var(--card-color);
@@ -46,11 +83,30 @@
             padding: 10px 15px;
             margin-top: 10px;
             box-shadow: 0 2px 5px var(--shadow-color);
-            border-left: 5px solid var(--accent-color);
+            border-left: 5px solid; /* Цвет будет динамическим */
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer; /* Для редактирования */
         }
-        .task-card p { margin: 5px 0; }
-        .task-card .task-title { font-weight: bold; }
-        .task-card .task-meta { font-size: 0.8em; opacity: 0.7; }
+        .task-card:hover {
+            transform: translateY(-2px);
+        }
+        .task-card p { margin: 5px 0; line-height: 1.4; }
+        .task-card .task-title { font-weight: bold; font-size: 1.1em; }
+        .task-card .task-meta { font-size: 0.8em; opacity: 0.8; }
+        .task-card.overdue {
+            border-color: var(--red-status) !important;
+            animation: pulse-red 1s infinite alternate;
+        }
+        .task-card.done {
+            opacity: 0.6;
+            border-color: var(--green-status) !important;
+            text-decoration: line-through;
+        }
+        
+        @keyframes pulse-red {
+            from { box-shadow: 0 0 5px rgba(220, 53, 69, 0.7); }
+            to { box-shadow: 0 0 15px rgba(220, 53, 69, 1); }
+        }
 
         /* Кнопка "Добавить" */
         #addTaskBtn {
@@ -66,6 +122,7 @@
             font-size: 30px;
             cursor: pointer;
             box-shadow: 0 4px 10px var(--shadow-color);
+            z-index: 1000;
         }
 
         /* Модальное окно */
@@ -79,6 +136,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            z-index: 1001;
+            overflow-y: auto; /* Для скролла на мобильных */
+            padding: 20px 0;
         }
         .modal-content {
             background-color: var(--main-color);
@@ -86,8 +146,12 @@
             border-radius: 12px;
             width: 90%;
             max-width: 500px;
+            box-shadow: 0 5px 15px var(--shadow-color);
         }
-        .modal-content input, .modal-content select {
+        .modal-content h2 { margin-top: 0; color: var(--text-color); }
+        .modal-content input, 
+        .modal-content select,
+        .modal-content textarea {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -96,41 +160,99 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             box-sizing: border-box;
+            font-size: 1em;
+        }
+        .modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
         }
         .modal-buttons {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
         }
-        .hidden { display: none; }
+        .modal-buttons button {
+            background-color: var(--card-color);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .modal-buttons button[type="submit"] {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .modal-buttons button:hover:not(:disabled) {
+            filter: brightness(1.2);
+        }
+        .modal-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .hidden { display: none !important; }
+
+        /* Адаптивность для очень маленьких экранов */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            #board { flex-direction: column; } /* Колонки друг под другом */
+            .week-column { min-width: unset; width: 100%; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .controls button, .controls select { width: 100%; }
+            #addTaskBtn { bottom: 15px; right: 15px; width: 50px; height: 50px; font-size: 24px; }
+            .modal-content { padding: 20px; }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <h1>Свалка</h1>
+        <div class="controls">
+            <select id="filterCategory">
+                <option value="">Все категории</option>
+            </select>
+            <select id="filterEpic">
+                <option value="">Все эпики</option>
+            </select>
+            <select id="filterStatus">
+                <option value="">Все статусы</option>
+            </select>
+            <button id="filterMyTasks">Только мои задачи</button>
+            <button id="filterOverdue">Просроченные</button>
+            <button id="resetFilters">Сбросить фильтры</button>
+        </div>
     </header>
 
     <main id="board">
-        <!-- Сюда будут вставляться колонки-недели -->
+        <!-- Сюда будут вставляться колонки-недели и задачи -->
     </main>
 
     <button id="addTaskBtn">+</button>
 
     <div id="modal" class="hidden">
         <div class="modal-content">
-            <h2>Новый мусор... то есть, задача</h2>
+            <h2 id="modalTitle">Новый мусор... то есть, задача</h2>
             <form id="taskForm">
+                <input type="hidden" name="ID" id="taskID"> <!-- Для редактирования -->
                 <input type="text" name="Task" placeholder="Что нужно сделать?" required>
-                <input type="text" name="Epic" placeholder="Эпик (например, 'Работа')">
-                <input type="text" name="Category" placeholder="Категория (например, 'Дизайн')">
+                <select name="Epic" id="selectEpic">
+                    <option value="">Выбери эпик</option>
+                </select>
+                <select name="Category" id="selectCategory">
+                    <option value="">Выбери категорию</option>
+                </select>
                 <input type="date" name="Date">
-                <input type="text" name="Level" placeholder="Сложность (1-5)">
-                <input type="text" name="Owner" placeholder="На ком задача? (Я)">
-                <input type="text" name="Color" placeholder="Цвет (hex, например #ff0000)">
+                <input type="text" name="Difficulty" placeholder="Сложность (1-5)">
+                <input type="text" name="Owner" placeholder="На ком задача? (Я)" value="Я">
+                <select name="Status" id="selectStatus">
+                    <option value="">Выбери статус</option>
+                </select>
+                <!-- Поле для цвета не нужно, он теперь берется из настроек по категории -->
                 <div class="modal-buttons">
                     <button type="button" id="closeModalBtn">Отмена</button>
-                    <button type="submit">Свалить в кучу</button>
+                    <button type="submit" id="saveTaskBtn">Свалить в кучу</button>
                 </div>
             </form>
         </div>
@@ -138,61 +260,307 @@
 
     <script>
         // !!! ВАЖНО !!! ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ИЗ APPS SCRIPT
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyfWIt7IuywK73ETY-K-6kkYKvRYz9GeLHVzX_agy1u0ALBq4JEG-mawj_5FiNvFHCpFw/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI7luywK73ETY-K-6KKyVkYRyz9GeLHVZX_agy1u0ALBq4JEG-mawj_5FlNvFHCpFW/exec'; // <-- Обновил с твоего скриншота
+
         const board = document.getElementById('board');
         const addTaskBtn = document.getElementById('addTaskBtn');
         const modal = document.getElementById('modal');
         const closeModalBtn = document.getElementById('closeModalBtn');
         const taskForm = document.getElementById('taskForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const saveTaskBtn = document.getElementById('saveTaskBtn');
 
-        // --- ЛОГИКА ОТОБРАЖЕНИЯ ---
+        // Элементы фильтров
+        const filterCategorySelect = document.getElementById('filterCategory');
+        const filterEpicSelect = document.getElementById('filterEpic');
+        const filterStatusSelect = document.getElementById('filterStatus');
+        const filterMyTasksBtn = document.getElementById('filterMyTasks');
+        const filterOverdueBtn = document.getElementById('filterOverdue');
+        const resetFiltersBtn = document.getElementById('resetFilters');
 
-        // Функция получения задач
-        async function fetchTasks() {
+        // Элементы формы для выбора
+        const selectEpic = document.getElementById('selectEpic');
+        const selectCategory = document.getElementById('selectCategory');
+        const selectStatus = document.getElementById('selectStatus');
+
+        let allTasks = []; // Хранит все загруженные задачи
+        let currentFilters = {
+            category: '',
+            epic: '',
+            status: '',
+            myTasks: false,
+            overdue: false
+        };
+        let appSettings = {
+            epics: [],
+            categories: [],
+            statuses: [],
+            categoryColors: {}
+        };
+
+        // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+        }
+
+        function getWeekRange(weekNo, year) {
+            const date = new Date(year, 0, 1 + (weekNo - 1) * 7); // Первый день года
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Первый день недели (понедельник)
+
+            const startOfWeek = new Date(date.setDate(diff));
+            const endOfWeek = new Date(date.setDate(diff + 6));
+            return { start: startOfWeek, end: endOfWeek };
+        }
+
+        // --- ЛОГИКА ОТОБРАЖЕНИЯ И ФИЛЬТРАЦИИ ---
+
+        async function fetchAppData() {
             board.innerHTML = '<h2>Загружаю твой хлам...</h2>';
             try {
                 const response = await fetch(SCRIPT_URL);
-                const tasks = await response.json();
-                renderTasks(tasks);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                allTasks = data.tasks;
+                appSettings.epics = data.epics;
+                appSettings.categories = data.categories;
+                appSettings.statuses = data.statuses;
+                appSettings.categoryColors = data.categoryColors;
+
+                populateFilterAndFormSelects(); // Заполняем выпадающие списки
+                applyFiltersAndRenderTasks(); // Применяем текущие фильтры и отрисовываем
             } catch (error) {
-                board.innerHTML = '<h2>Ошибка. Не смог достучаться до твоей таблицы. Проверяй, что натворил.</h2>';
+                board.innerHTML = `<h2>Ошибка: ${error.message}. Не смог достучаться до твоей таблицы или что-то пошло не так. Проверяй, что натворил.</h2>`;
                 console.error('Ошибка при загрузке:', error);
             }
         }
 
-        // Функция отрисовки задач
-        function renderTasks(tasks) {
-            board.innerHTML = '';
-            
-            // Простая группировка: просто выводим все в одну колонку "Вся Свалка"
-            // Потом усложним до недель
-            const column = document.createElement('div');
-            column.className = 'week-column';
-            column.innerHTML = '<h3>Вся Свалка</h3>';
-            
-            tasks.forEach(task => {
-                const card = document.createElement('div');
-                card.className = 'task-card';
-                if (task.Color) {
-                    card.style.borderLeftColor = task.Color;
-                }
-                
-                card.innerHTML = `
-                    <p class="task-title">${task.Task}</p>
-                    <p class="task-meta"><strong>Категория:</strong> ${task.Category || '---'}</p>
-                    <p class="task-meta"><strong>Статус:</strong> ${task.Status}</p>
-                    <p class="task-meta"><strong>Дедлайн:</strong> ${task.Date ? new Date(task.Date).toLocaleDateString() : '---'}</p>
-                `;
-                column.appendChild(card);
+        function populateFilterAndFormSelects() {
+            // Очищаем и заполняем фильтры
+            filterCategorySelect.innerHTML = '<option value="">Все категории</option>';
+            appSettings.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                filterCategorySelect.appendChild(option);
             });
-            board.appendChild(column);
+
+            filterEpicSelect.innerHTML = '<option value="">Все эпики</option>';
+            appSettings.epics.forEach(epic => {
+                const option = document.createElement('option');
+                option.value = epic;
+                option.textContent = epic;
+                filterEpicSelect.appendChild(option);
+            });
+
+            filterStatusSelect.innerHTML = '<option value="">Все статусы</option>';
+            appSettings.statuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status;
+                option.textContent = status;
+                filterStatusSelect.appendChild(option);
+            });
+
+            // Очищаем и заполняем селекты в форме
+            selectEpic.innerHTML = '<option value="">Выбери эпик</option>';
+            appSettings.epics.forEach(epic => {
+                const option = document.createElement('option');
+                option.value = epic;
+                option.textContent = epic;
+                selectEpic.appendChild(option);
+            });
+
+            selectCategory.innerHTML = '<option value="">Выбери категорию</option>';
+            appSettings.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                selectCategory.appendChild(option);
+            });
+
+            selectStatus.innerHTML = '<option value="">Выбери статус</option>';
+            appSettings.statuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status;
+                option.textContent = status;
+                selectStatus.appendChild(option);
+            });
         }
 
-        // --- ЛОГИКА ДОБАВЛЕНИЯ ЗАДАЧ ---
+        function applyFiltersAndRenderTasks() {
+            let filteredTasks = [...allTasks]; // Копируем все задачи
 
-        // Открыть модальное окно
+            // Фильтрация по категории
+            if (currentFilters.category) {
+                filteredTasks = filteredTasks.filter(task => task.Category === currentFilters.category);
+            }
+            // Фильтрация по эпику
+            if (currentFilters.epic) {
+                filteredTasks = filteredTasks.filter(task => task.Epic === currentFilters.epic);
+            }
+            // Фильтрация по статусу
+            if (currentFilters.status) {
+                filteredTasks = filteredTasks.filter(task => task.Status === currentFilters.status);
+            }
+            // Фильтрация "Только мои задачи"
+            if (currentFilters.myTasks) {
+                filteredTasks = filteredTasks.filter(task => task.Owner && task.Owner.toLowerCase() === 'я');
+            }
+            // Фильтрация "Просроченные"
+            if (currentFilters.overdue) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                filteredTasks = filteredTasks.filter(task => 
+                    task.Date && new Date(task.Date) < today && task.Status !== 'Готово' && task.Status !== 'Архив'
+                );
+            }
+
+            renderTasks(filteredTasks); // Отрисовываем отфильтрованные задачи
+        }
+
+
+        function renderTasks(tasksToRender) {
+            board.innerHTML = ''; // Очищаем доску
+
+            const groupedTasks = {};
+            const currentYear = new Date().getFullYear();
+
+            // Группировка по неделям
+            tasksToRender.forEach(task => {
+                if (task.Date) {
+                    const taskDate = new Date(task.Date);
+                    // Проверяем, что дата валидна
+                    if (isNaN(taskDate)) return; 
+
+                    const weekNo = getWeekNumber(taskDate);
+                    const year = taskDate.getFullYear();
+                    const weekKey = `${year}-${weekNo}`;
+
+                    if (!groupedTasks[weekKey]) {
+                        groupedTasks[weekKey] = {
+                            weekNumber: weekNo,
+                            year: year,
+                            tasks: []
+                        };
+                    }
+                    groupedTasks[weekKey].tasks.push(task);
+                } else {
+                    // Задачи без даты идут в колонку "Без даты"
+                    if (!groupedTasks['no-date']) {
+                        groupedTasks['no-date'] = { weekNumber: 'no-date', tasks: [] };
+                    }
+                    groupedTasks['no-date'].tasks.push(task);
+                }
+            });
+
+            // Сортировка колонок по номеру недели
+            const sortedWeekKeys = Object.keys(groupedTasks).sort((a, b) => {
+                if (a === 'no-date') return 1; // "Без даты" всегда в конце
+                if (b === 'no-date') return -1;
+                const [yearA, weekA] = a.split('-').map(Number);
+                const [yearB, weekB] = b.split('-').map(Number);
+                if (yearA !== yearB) return yearA - yearB;
+                return weekA - weekB;
+            });
+
+            sortedWeekKeys.forEach(key => {
+                const weekData = groupedTasks[key];
+                const column = document.createElement('div');
+                column.className = 'week-column';
+                
+                let columnTitle = '';
+                if (key === 'no-date') {
+                    columnTitle = 'Без даты';
+                } else {
+                    const { start, end } = getWeekRange(weekData.weekNumber, weekData.year);
+                    columnTitle = `Неделя ${weekData.weekNumber} (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`;
+                }
+                column.innerHTML = `<h3>${columnTitle}</h3>`;
+                
+                // Сортируем задачи внутри колонки (например, по дате)
+                weekData.tasks.sort((a, b) => {
+                    if (!a.Date && !b.Date) return 0;
+                    if (!a.Date) return 1;
+                    if (!b.Date) return -1;
+                    return new Date(a.Date) - new Date(b.Date);
+                });
+
+                weekData.tasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = 'task-card';
+                    card.dataset.id = task.ID; // Для редактирования
+
+                    // Цвет границы карточки из настроек
+                    const taskColor = appSettings.categoryColors[task.Category] || '#555'; // Дефолтный серый
+                    card.style.borderLeftColor = taskColor;
+
+                    // Классы для просроченных и выполненных
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const taskDate = task.Date ? new Date(task.Date) : null;
+                    if (taskDate && taskDate < today && task.Status !== 'Готово' && task.Status !== 'Архив') {
+                        card.classList.add('overdue');
+                    }
+                    if (task.Status === 'Готово') {
+                        card.classList.add('done');
+                    }
+
+                    card.innerHTML = `
+                        <p class="task-title">${task.Task}</p>
+                        <p class="task-meta"><strong>Эпик:</strong> ${task.Epic || '---'}</p>
+                        <p class="task-meta"><strong>Категория:</strong> ${task.Category || '---'}</p>
+                        <p class="task-meta"><strong>Статус:</strong> ${task.Status || '---'}</p>
+                        <p class="task-meta"><strong>Дедлайн:</strong> ${task.Date ? new Date(task.Date).toLocaleDateString() : '---'}</p>
+                        <p class="task-meta"><strong>Сложность:</strong> ${task.Difficulty || '---'}</p>
+                        <p class="task-meta"><strong>Ответственный:</strong> ${task.Owner || '---'}</p>
+                    `;
+                    column.appendChild(card);
+                });
+                board.appendChild(column);
+            });
+        }
+
+        // --- ЛОГИКА ДОБАВЛЕНИЯ/РЕДАКТИРОВАНИЯ ЗАДАЧ ---
+
+        // Открытие модального окна для новой задачи
         addTaskBtn.addEventListener('click', () => {
+            modalTitle.textContent = 'Новый мусор... то есть, задача';
+            saveTaskBtn.textContent = 'Свалить в кучу';
+            taskForm.reset();
+            document.getElementById('taskID').value = ''; // Сброс ID
+            document.getElementById('Owner').value = 'Я'; // Дефолтный владелец
             modal.classList.remove('hidden');
+        });
+
+        // Открытие модального окна для редактирования задачи
+        board.addEventListener('click', (e) => {
+            const card = e.target.closest('.task-card');
+            if (card) {
+                const taskId = card.dataset.id;
+                const taskToEdit = allTasks.find(task => task.ID === taskId);
+                if (taskToEdit) {
+                    modalTitle.textContent = 'Редактировать мусор';
+                    saveTaskBtn.textContent = 'Обновить свалку';
+                    document.getElementById('taskID').value = taskToEdit.ID; // Записываем ID
+                    taskForm.Task.value = taskToEdit.Task || '';
+                    taskForm.Epic.value = taskToEdit.Epic || '';
+                    taskForm.Category.value = taskToEdit.Category || '';
+                    taskForm.Date.value = taskToEdit.Date ? new Date(taskToEdit.Date).toISOString().split('T')[0] : '';
+                    taskForm.Difficulty.value = taskToEdit.Difficulty || '';
+                    taskForm.Owner.value = taskToEdit.Owner || '';
+                    taskForm.Status.value = taskToEdit.Status || '';
+                    modal.classList.remove('hidden');
+                }
+            }
         });
 
         // Закрыть модальное окно
@@ -200,35 +568,100 @@
             modal.classList.add('hidden');
         });
         
-        // Отправка формы
+        // Отправка формы (добавление или обновление)
         taskForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(taskForm);
             const taskData = Object.fromEntries(formData.entries());
             
-            const submitButton = taskForm.querySelector('button[type="submit"]');
-            submitButton.textContent = 'Сваливаю...';
-            submitButton.disabled = true;
+            // Если ID есть, это обновление
+            const isUpdate = !!taskData.ID;
+
+            // Заменяем ID на 'NO_ID' для новой задачи, т.к. GAS сам сгенерирует
+            if (!isUpdate) {
+                delete taskData.ID; 
+            }
+
+            // Добавляем цвет на основе выбранной категории (на всякий случай, если GAS не сделает)
+            taskData.Color = appSettings.categoryColors[taskData.Category] || '';
+
+            saveTaskBtn.textContent = isUpdate ? 'Обновляю...' : 'Сваливаю...';
+            saveTaskBtn.disabled = true;
 
             try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
+                const method = isUpdate ? 'PUT' : 'POST'; // В Apps Script мы пока используем только POST
+                const url = SCRIPT_URL; // Пока что все через один URL
+
+                const response = await fetch(url, {
+                    method: 'POST', // ВАЖНО: Apps Script Web App принимает только POST для doPOST, даже для обновления. 
+                                    // Логика обновления будет на стороне Apps Script, он должен уметь найти по ID
                     body: JSON.stringify(taskData),
                 });
-                taskForm.reset();
-                modal.classList.add('hidden');
-                fetchTasks(); // Обновляем список
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    taskForm.reset();
+                    modal.classList.add('hidden');
+                    fetchAppData(); // Обновляем все данные
+                } else {
+                    alert(`Не удалось выполнить действие: ${result.message || 'Неизвестная ошибка Apps Script'}`);
+                }
             } catch (error) {
-                alert('Не удалось добавить задачу. Возможно, я сломался.');
-                console.error('Ошибка при добавлении:', error);
+                alert('Не удалось выполнить действие. Возможно, я сломался или нет связи с Google.');
+                console.error('Ошибка при работе с задачей:', error);
             } finally {
-                submitButton.textContent = 'Свалить в кучу';
-                submitButton.disabled = false;
+                saveTaskBtn.textContent = isUpdate ? 'Обновить свалку' : 'Свалить в кучу';
+                saveTaskBtn.disabled = false;
             }
         });
 
+        // --- ЛОГИКА ФИЛЬТРОВ ---
+
+        filterCategorySelect.addEventListener('change', (e) => {
+            currentFilters.category = e.target.value;
+            applyFiltersAndRenderTasks();
+        });
+
+        filterEpicSelect.addEventListener('change', (e) => {
+            currentFilters.epic = e.target.value;
+            applyFiltersAndRenderTasks();
+        });
+
+        filterStatusSelect.addEventListener('change', (e) => {
+            currentFilters.status = e.target.value;
+            applyFiltersAndRenderTasks();
+        });
+
+        filterMyTasksBtn.addEventListener('click', () => {
+            currentFilters.myTasks = !currentFilters.myTasks;
+            filterMyTasksBtn.classList.toggle('active', currentFilters.myTasks);
+            applyFiltersAndRenderTasks();
+        });
+
+        filterOverdueBtn.addEventListener('click', () => {
+            currentFilters.overdue = !currentFilters.overdue;
+            filterOverdueBtn.classList.toggle('active', currentFilters.overdue);
+            applyFiltersAndRenderTasks();
+        });
+
+        resetFiltersBtn.addEventListener('click', () => {
+            currentFilters = {
+                category: '',
+                epic: '',
+                status: '',
+                myTasks: false,
+                overdue: false
+            };
+            filterCategorySelect.value = '';
+            filterEpicSelect.value = '';
+            filterStatusSelect.value = '';
+            filterMyTasksBtn.classList.remove('active');
+            filterOverdueBtn.classList.remove('active');
+            applyFiltersAndRenderTasks();
+        });
+
         // --- ПЕРВЫЙ ЗАПУСК ---
-        fetchTasks();
+        fetchAppData();
     </script>
 
 </body>
