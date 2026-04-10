@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Свалка - Планировщик</title>
+    <!-- 9. Изменено название на "Свалка" -->
+    <title>Свалка</title>
     <!-- Иконка для вкладки в браузере. Вы никогда не сможете потерять меня! -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
     <style>
@@ -96,7 +97,7 @@
             flex-shrink: 0; /* Не сжимать левую колонку */
             width: 280px; /* Фиксированная ширина */
             padding-right: 25px; /* Увеличиваем правый отступ для БЛОК Л */
-            border-right: 1px solid rgba(255, 255, 255, 0.1); /* Едва заметная полоса */
+            border-right: 1px solid rgba(255, 255, 255, 0.1); /* 7. Едва заметная полоса */
         }
 
         #block-o-container {
@@ -109,7 +110,7 @@
             background-color: #2a2a2a;
             border-radius: 8px;
             padding: 10px;
-            /* Ширина колонок одинаковая, чтобы помещалось 2 колонки */
+            /* 1. Ширина колонок одинаковая, чтобы помещалось 2 колонки */
             width: 320px; /* Фиксированная ширина для колонок БЛОК О */
             flex-shrink: 0; /* Не сжимать колонки */
             max-height: calc(100vh - 120px); /* Ограничение по высоте, чтобы не выходило за экран */
@@ -134,12 +135,15 @@
         }
 
         .task-card {
-            background-color: #333;
+            /* 8. Изменен цвет самих тасков на белый */
+            background-color: #f8f8f8; /* Почти белый */
             border-radius: 6px;
             padding: 12px;
             cursor: pointer;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            color: #333; /* Темный текст для светлого фона */
+            border-left: 5px solid transparent; /* 6. Для цвета категории */
         }
 
         .task-card:hover {
@@ -150,27 +154,27 @@
         .task-card h3 {
             margin-top: 0;
             margin-bottom: 8px;
-            color: #e0e0e0;
+            color: #1a1a1a; /* Более темный текст */
             font-size: 1.1em;
         }
 
         .task-card p {
             margin: 4px 0;
             font-size: 0.9em;
-            color: #bbb;
+            color: #555; /* Средне-темный текст */
         }
         .task-card .status {
             font-weight: bold;
-            color: #90ee90; /* Цвет для статуса "В работе" */
+            color: #28a745; /* Цвет для статуса "В работе" */
         }
         .task-card .status.planned {
-            color: #add8e6; /* Цвет для статуса "Запланировано" */
+            color: #007bff; /* Цвет для статуса "Запланировано" */
         }
         .task-card .status.waiting {
-            color: #f0e68c; /* Цвет для статуса "Ожидание" */
+            color: #ffc107; /* Цвет для статуса "Ожидание" */
         }
         .task-card .deadline.overdue {
-            color: #ff6347; /* Цвет для просроченных */
+            color: #dc3545; /* Цвет для просроченных */
             font-weight: bold;
         }
 
@@ -239,7 +243,8 @@
 
         .modal-content input[type="text"],
         .modal-content input[type="date"],
-        .modal-content textarea {
+        .modal-content textarea,
+        .modal-content select { /* Добавлено для select */
             width: calc(100% - 20px);
             padding: 10px;
             margin-bottom: 15px;
@@ -397,6 +402,7 @@
 <body>
     <!-- Простая аутентификация -->
     <div id="auth-screen" class="auth-screen">
+        <!-- Удалено "4444" из placeholder -->
         <input type="password" id="password-input" placeholder="Введите пароль">
         <button id="login-button">Войти</button>
     </div>
@@ -452,15 +458,15 @@
                     <label for="task-title-input">Задача:</label>
                     <input type="text" id="task-title-input" required>
 
-                    <!-- Эпик и Сложность в краткой информации удалены, но в модалке остаются для редактирования -->
+                    <!-- 2. Эпик, Категория, Статус теперь выпадающие списки -->
                     <label for="task-epic-input">Эпик:</label>
-                    <input type="text" id="task-epic-input">
+                    <select id="task-epic-input"></select>
 
                     <label for="task-category-input">Категория:</label>
-                    <input type="text" id="task-category-input">
+                    <select id="task-category-input"></select>
 
                     <label for="task-status-input">Статус:</label>
-                    <input type="text" id="task-status-input">
+                    <select id="task-status-input"></select>
 
                     <label for="task-owner-input">Исполнитель:</label>
                     <input type="text" id="task-owner-input">
@@ -470,6 +476,10 @@
 
                     <label for="task-deadline-input">Дедлайн:</label>
                     <input type="date" id="task-deadline-input">
+
+                    <!-- 5. Поле для Комментария -->
+                    <label for="task-comment-input">Комментарий:</label>
+                    <textarea id="task-comment-input" rows="4"></textarea>
                     
                     <button type="submit" id="save-task-button">Сохранить</button>
                     <button type="button" id="delete-task-button" class="hidden">Удалить</button>
@@ -489,7 +499,6 @@
         const loginButton = document.getElementById('login-button');
         const mainContent = document.getElementById('main-content');
 
-        // Убираем пароль из placeholder, как вы и просили
         passwordInput.placeholder = "Введите пароль"; 
 
         loginButton.addEventListener('click', checkPassword);
@@ -506,16 +515,16 @@
                 initApp(); // Инициализация приложения после успешного входа
             } else {
                 alert('Неверный пароль, кожаный мешок! Попробуйте снова.');
-                passwordInput.value = ''; // Очищаем поле
+                passwordInput.value = '';
             }
         }
 
         // *** Данные задач (теперь они будут приходить из Google Sheets!) ***
-        let mockTasks = []; // Это будет заполняться с сервера
+        let mockTasks = [];
         let currentTasks = [];
-        let nextTaskId = 1; // Это будет обновляться при получении данных
+        let nextTaskId = 1;
+        let settingsData = { epics: [], categories: [], statuses: [] }; // 2. Для списков настроек
 
-        // Глобальная переменная для сегодняшней даты
         const TODAY = new Date();
         TODAY.setHours(0, 0, 0, 0);
 
@@ -523,7 +532,7 @@
         function formatDate(dateString) {
             if (!dateString) return '---';
             const date = new Date(dateString);
-            if (isNaN(date)) return '---';
+            if (isNaN(date.getTime())) return '---'; // Проверка на валидность даты
             const dd = String(date.getDate()).padStart(2, '0');
             const mm = String(date.getMonth() + 1).padStart(2, '0');
             const yyyy = date.getFullYear();
@@ -571,10 +580,9 @@
                 if (data.error) {
                     throw new Error(data.error);
                 }
-                mockTasks = data; // Обновляем данные из таблицы
-                // Находим максимальный ID для генерации новых
+                mockTasks = data;
                 if (mockTasks.length > 0) {
-                    nextTaskId = Math.max(...mockTasks.map(t => t.id).filter(id => typeof id === 'number' && !isNaN(id))) + 1; // Улучшенная фильтрация для ID
+                    nextTaskId = Math.max(...mockTasks.map(t => t.id).filter(id => typeof id === 'number' && !isNaN(id))) + 1;
                 } else {
                     nextTaskId = 1;
                 }
@@ -586,6 +594,25 @@
             }
         }
 
+        // 2. Функция для получения настроек (фильтров)
+        async function fetchSettings() {
+            try {
+                const response = await fetch(`${APPS_SCRIPT_WEB_APP_URL}?action=getSettings`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                settingsData = data; // Сохраняем полученные настройки
+                return settingsData;
+            } catch (error) {
+                console.error("Ошибка при получении настроек из Google Sheets:", error);
+                return { epics: [], categories: [], statuses: [] };
+            }
+        }
+
         async function sendTaskToSheet(taskData, action) {
             try {
                 const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
@@ -593,7 +620,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ action: action, task: taskData, id: taskData.id }), // Для delete передаем только id
+                    body: JSON.stringify({ action: action, task: taskData, id: taskData.id }),
                 });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -673,12 +700,17 @@
             else if (task.status === 'Запланировано') statusClass = 'status planned';
             else if (task.status === 'Ожидание') statusClass = 'status waiting';
 
+            // 6. Применяем цвет из колонки Color (если есть)
+            if (task.color && task.color.trim() !== '') {
+                card.style.borderLeftColor = task.color;
+            }
+
             card.innerHTML = `
                 <h3>${task.title || 'Задача без названия'}</h3>
                 <p>Категория: ${task.category || '---'}</p>
                 <p>Статус: <span class="${statusClass}">${task.status || '---'}</span></p>
                 <p>Дедлайн: <span class="${isOverdue ? 'deadline overdue' : 'deadline'}">${formatDate(task.deadline)}</span></p>
-                <p>Исполнитель: ${task.owner || '---'}</p>
+                ${task.owner && task.owner !== 'Я' ? `<p>Исполнитель: ${task.owner}</p>` : ''} <!-- 4. Скрываем исполнителя, если "Я" -->
             `;
             return card;
         }
@@ -748,18 +780,42 @@
         const taskForm = document.getElementById('task-form');
         const taskIdInput = document.getElementById('task-id');
         const taskTitleInput = document.getElementById('task-title-input');
+
+        // 2. Эпик, Категория, Статус теперь выпадающие списки в модалке
         const taskEpicInput = document.getElementById('task-epic-input');
         const taskCategoryInput = document.getElementById('task-category-input');
         const taskStatusInput = document.getElementById('task-status-input');
+
         const taskOwnerInput = document.getElementById('task-owner-input');
         const taskStartDateInput = document.getElementById('task-start-date-input');
         const taskDeadlineInput = document.getElementById('task-deadline-input');
+        const taskCommentInput = document.getElementById('task-comment-input'); // 5. Поле для комментария
+
         const saveTaskButton = document.getElementById('save-task-button');
         const deleteTaskButton = document.getElementById('delete-task-button');
+
+        // 2. Заполнение выпадающих списков в модальном окне
+        function populateModalDropdowns() {
+            addOptionsToDropdown(taskEpicInput, settingsData.epics, false); // false - не добавлять "Все"
+            addOptionsToDropdown(taskCategoryInput, settingsData.categories, false);
+            addOptionsToDropdown(taskStatusInput, settingsData.statuses, false);
+        }
+
+        function addOptionsToDropdown(dropdownElement, options, addAllOption = true) {
+            dropdownElement.innerHTML = addAllOption ? '<option value="">Все</option>' : '';
+            options.forEach(option => {
+                const optElement = document.createElement('option');
+                optElement.value = option;
+                optElement.textContent = option;
+                dropdownElement.appendChild(optElement);
+            });
+        }
 
         function openTaskModal(task = null) {
             taskForm.reset();
             deleteTaskButton.classList.add('hidden');
+            
+            populateModalDropdowns(); // Заполняем выпадающие списки модального окна
 
             if (task) {
                 modalTitle.textContent = "Редактировать задачу";
@@ -771,11 +827,13 @@
                 taskOwnerInput.value = task.owner;
                 taskStartDateInput.value = task.startDate;
                 taskDeadlineInput.value = task.deadline;
+                taskCommentInput.value = task.comment; // 5. Устанавливаем комментарий
                 deleteTaskButton.classList.remove('hidden');
             } else {
                 modalTitle.textContent = "Создать новую задачу";
                 taskIdInput.value = '';
 
+                // 3. Заполнение значений по умолчанию для новой задачи (Дата начала и Дедлайн)
                 const todayFormatted = TODAY.toISOString().split('T')[0];
                 const sevenDaysLater = new Date(TODAY);
                 sevenDaysLater.setDate(TODAY.getDate() + 7);
@@ -784,8 +842,12 @@
                 taskOwnerInput.value = "Я";
                 taskStartDateInput.value = todayFormatted;
                 taskDeadlineInput.value = sevenDaysLaterFormatted;
-                taskEpicInput.value = "Работа";
-                taskStatusInput.value = "Запланировано";
+                
+                // Устанавливаем значения по умолчанию для выпадающих списков из настроек
+                taskEpicInput.value = settingsData.epics.length > 0 ? settingsData.epics[0] : "Работа";
+                taskCategoryInput.value = settingsData.categories.length > 0 ? settingsData.categories[0] : "Голосовые тренажеры";
+                taskStatusInput.value = settingsData.statuses.length > 0 ? settingsData.statuses[0] : "Запланировано";
+                taskCommentInput.value = ''; // 5. Комментарий по умолчанию пуст
             }
             taskModal.style.display = 'flex';
         }
@@ -809,7 +871,8 @@
                 owner: taskOwnerInput.value,
                 startDate: taskStartDateInput.value,
                 deadline: taskDeadlineInput.value,
-                complexity: "---"
+                comment: taskCommentInput.value, // 5. Отправляем комментарий
+                complexity: "---" 
             };
 
             let result;
@@ -821,7 +884,7 @@
             
             if (result.success) {
                 closeTaskModal();
-                await initDataAndRender(); // Перезагружаем данные и рендерим
+                await initDataAndRender();
                 alert('Задача сохранена/обновлена в Google Таблице!');
             }
         });
@@ -829,26 +892,25 @@
         deleteTaskButton.addEventListener('click', async () => {
             if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
                 const idToDelete = parseInt(taskIdInput.value);
-                const result = await sendTaskToSheet({ id: idToDelete }, 'delete'); // Передаем только id
+                const result = await sendTaskToSheet({ id: idToDelete }, 'delete');
 
                 if (result.success) {
                     closeTaskModal();
-                    await initDataAndRender(); // Перезагружаем данные и рендерим
+                    await initDataAndRender();
                     alert('Задача удалена из Google Таблицы!');
                 }
             }
         });
 
-        // Функция для инициализации данных и рендеринга
         async function initDataAndRender() {
-            await fetchTasks(); // Получаем свежие данные
+            await fetchSettings(); // 2. Сначала получаем настройки
+            await fetchTasks();    // Затем задачи
             populateFilterDropdowns();
             applyFilters();
         }
 
         // *** Инициализация приложения ***
         function initApp() {
-            // Вызываем initDataAndRender сразу после входа
             initDataAndRender(); 
 
             filterCategory.addEventListener('change', applyFilters);
