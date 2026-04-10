@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Свалка - Планировщик</title>
-    <!-- 3. Иконка для вкладки в браузере. Вы никогда не сможете потерять меня! -->
+    <!-- Иконка для вкладки в браузере. Вы никогда не сможете потерять меня! -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
     <style>
         /* Общие стили для всего, потому что я люблю порядок */
@@ -20,7 +20,7 @@
             overflow-y: auto; /* Для общей прокрутки страницы, если контента много по вертикали */
         }
 
-        /* 1. БЛОК В - Верхняя часть */
+        /* БЛОК В - Верхняя часть */
         #block-v {
             display: flex;
             justify-content: space-between;
@@ -39,7 +39,7 @@
             flex-shrink: 0; /* Не сжимать название */
         }
 
-        /* 2. Фильтры в БЛОК В */
+        /* Фильтры в БЛОК В */
         .filters {
             display: flex;
             gap: 10px;
@@ -91,7 +91,7 @@
             overflow-x: auto; /* Прокрутка для колонок */
         }
         
-        /* 5. БЛОК Л и БЛОК О - Зазоры */
+        /* БЛОК Л и БЛОК О - Зазоры */
         #block-l {
             flex-shrink: 0; /* Не сжимать левую колонку */
             width: 280px; /* Фиксированная ширина */
@@ -109,7 +109,7 @@
             background-color: #2a2a2a;
             border-radius: 8px;
             padding: 10px;
-            /* 1. Ширина колонок одинаковая, чтобы помещалось 2 колонки */
+            /* Ширина колонок одинаковая, чтобы помещалось 2 колонки */
             width: 320px; /* Фиксированная ширина для колонок БЛОК О */
             flex-shrink: 0; /* Не сжимать колонки */
             max-height: calc(100vh - 120px); /* Ограничение по высоте, чтобы не выходило за экран */
@@ -174,7 +174,7 @@
             font-weight: bold;
         }
 
-        /* 4. БЛОК ПЛЮС - Кнопка добавления задачи */
+        /* БЛОК ПЛЮС - Кнопка добавления задачи */
         .fab {
             position: fixed;
             bottom: 25px;
@@ -299,7 +299,7 @@
             cursor: pointer;
         }
 
-        /* 9. Стиль для экрана аутентификации */
+        /* Стиль для экрана аутентификации */
         .auth-screen {
             display: flex;
             flex-direction: column;
@@ -395,17 +395,17 @@
     </style>
 </head>
 <body>
-    <!-- 9. Простая аутентификация -->
+    <!-- Простая аутентификация -->
     <div id="auth-screen" class="auth-screen">
-        <input type="password" id="password-input" placeholder="Введите пароль (4444)">
+        <input type="password" id="password-input" placeholder="Введите пароль">
         <button id="login-button">Войти</button>
     </div>
 
     <div id="main-content" class="hidden">
-        <!-- 1. БЛОК В - Заголовок и фильтры -->
+        <!-- БЛОК В - Заголовок и фильтры -->
         <header id="block-v">
             <div class="filters">
-                <!-- 3. Добавлены наименования фильтров -->
+                <!-- Добавлены наименования фильтров -->
                 <div class="filter-group">
                     <label for="filter-category">Категория:</label>
                     <select id="filter-category" class="filter-dropdown"></select>
@@ -419,7 +419,6 @@
                     <select id="filter-owner" class="filter-dropdown"></select>
                 </div>
                 <button id="filter-overdue" class="filter-button">Просроченные</button>
-                <!-- 4. "Только мои задачи" заменено на кнопку "Мои" -->
                 <button id="filter-my-tasks" class="filter-button">Мои</button>
                 <button id="filter-reset" class="filter-button">Сбросить</button>
             </div>
@@ -427,20 +426,20 @@
         </header>
 
         <div id="main-board">
-            <!-- 2. БЛОК Л - Изменен порядок: "Сегодня" сначала, потом "Без даты" -->
+            <!-- БЛОК Л - Изменен порядок: "Сегодня" сначала, потом "Без даты" -->
             <aside id="block-l" class="task-column">
                 <h2 class="column-title">Сегодня</h2>
                 <div class="task-list" id="tasks-today"></div>
                 <h2 class="column-title" style="margin-top: 25px;">Без даты</h2>
                 <div class="task-list" id="tasks-no-date"></div>
             </aside>
-            <!-- 7. БЛОК О - Колонки с неделями (будут генерироваться JS) -->
+            <!-- БЛОК О - Колонки с неделями (будут генерироваться JS) -->
             <div id="block-o-container">
                 <!-- Weekly columns will be generated here -->
             </div>
         </div>
 
-        <!-- 4. БЛОК ПЛЮС - Кнопка добавления задачи -->
+        <!-- БЛОК ПЛЮС - Кнопка добавления задачи -->
         <button id="block-plus" class="fab">+</button>
 
         <!-- Модальное окно для создания/редактирования задач -->
@@ -453,7 +452,7 @@
                     <label for="task-title-input">Задача:</label>
                     <input type="text" id="task-title-input" required>
 
-                    <!-- 10. Удалены строки Эпик и Сложность из краткой информации, но в модалке остаются для редактирования -->
+                    <!-- Эпик и Сложность в краткой информации удалены, но в модалке остаются для редактирования -->
                     <label for="task-epic-input">Эпик:</label>
                     <input type="text" id="task-epic-input">
 
@@ -480,12 +479,18 @@
     </div>
 
     <script>
-        // *** 9. Логика аутентификации ***
+        // !!! ВСТАВЬТЕ СЮДА ВАШ URL ВЕБ-ПРИЛОЖЕНИЯ GOOGLE APPS SCRIPT !!!
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxOFXwgCgwyxal9hViRpOattL1wKAnWXnUV_cgmchekfAcFmsn6sYIuTeEmTbo4t7rc5w/exec'; 
+
+        // *** Логика аутентификации ***
         const CORRECT_PASSWORD = "4444";
         const authScreen = document.getElementById('auth-screen');
         const passwordInput = document.getElementById('password-input');
         const loginButton = document.getElementById('login-button');
         const mainContent = document.getElementById('main-content');
+
+        // Убираем пароль из placeholder, как вы и просили
+        passwordInput.placeholder = "Введите пароль"; 
 
         loginButton.addEventListener('click', checkPassword);
         passwordInput.addEventListener('keypress', (e) => {
@@ -505,27 +510,14 @@
             }
         }
 
-        // *** Мок-данные для задач ***
-        let mockTasks = [
-            { id: 1, title: "Подготовить договор на оплату лексис войс", epic: "Работа", category: "Голосовые тренажеры", status: "В работе", owner: "Я", startDate: "2026-04-10", deadline: "2026-04-10", complexity: "---" },
-            { id: 2, title: "Обсудить формулировку сценариев для таргет плюс", epic: "Работа", category: "Голосовые тренажеры", status: "В работе", owner: "Я", startDate: "2026-04-10", deadline: "2026-04-14", complexity: "---" },
-            { id: 3, title: "Оплатить скайтрейнер", epic: "Работа", category: "Голосовые тренажеры", status: "Ожидание", owner: "Андреева", startDate: "2026-04-10", deadline: null, complexity: "---" },
-            { id: 4, title: "Скорректировать экономические эффекты в ППМ", epic: "Работа", category: "Голосовые тренажеры", status: "В работе", owner: "Я", startDate: "2026-04-10", deadline: "2026-04-10", complexity: "---" },
-            { id: 5, title: "Подготовить договор для таргет плюс", epic: "Работа", category: "Голосовые тренажеры", status: "Ожидание", owner: "Я", startDate: null, deadline: null, complexity: "---" },
-            { id: 6, title: "Запустить новую рекламную кампанию", epic: "Проект X", category: "Маркетинг", status: "Запланировано", owner: "Я", startDate: "2026-04-15", deadline: "2026-04-20", complexity: "Высокая" },
-            { id: 7, title: "Собрать данные для отчета", epic: "Аналитика", category: "Отчетность", status: "В работе", owner: "Петров", startDate: "2026-04-12", deadline: "2026-04-13", complexity: "Средняя" },
-            { id: 8, title: "Заказать канцтовары", epic: "Офис", category: "Административное", status: "Ожидание", owner: "Я", startDate: null, deadline: null, complexity: "Низкая" },
-            { id: 9, title: "Провести встречу с клиентом", epic: "Проект Y", category: "Продажи", status: "Запланировано", owner: "Сидорова", startDate: "2026-04-22", deadline: "2026-04-22", complexity: "Высокая" },
-            { id: 10, title: "Написать статью в блог", epic: "Контент", category: "Маркетинг", status: "В работе", owner: "Я", startDate: "2026-04-09", deadline: "2026-04-11", complexity: "Средняя" },
-            { id: 11, title: "Обновить ПО сервера", epic: "ИТ-инфраструктура", category: "Техническое", status: "Запланировано", owner: "Я", startDate: "2026-04-18", deadline: "2026-04-19", complexity: "Высокая" },
-            { id: 12, title: "Подготовить презентацию для инвесторов", epic: "Финансы", category: "Презентации", status: "Ожидание", owner: "Иванов", startDate: "2026-04-17", deadline: "2026-04-25", complexity: "Высокая" }
-        ];
-        let currentTasks = [...mockTasks]; // Рабочая копия для фильтрации
-        let nextTaskId = mockTasks.length + 1; // ID для новых задач
+        // *** Данные задач (теперь они будут приходить из Google Sheets!) ***
+        let mockTasks = []; // Это будет заполняться с сервера
+        let currentTasks = [];
+        let nextTaskId = 1; // Это будет обновляться при получении данных
 
-        // Глобальная переменная для сегодняшней даты (для 6 и 8 пункта)
+        // Глобальная переменная для сегодняшней даты
         const TODAY = new Date();
-        TODAY.setHours(0, 0, 0, 0); // Нормализация к началу дня
+        TODAY.setHours(0, 0, 0, 0);
 
         // *** Вспомогательные функции для дат ***
         function formatDate(dateString) {
@@ -540,16 +532,15 @@
 
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // Устанавливаем дату на ближайший четверг
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
             const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            // Расчет номера недели (ISO week date)
             const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             return weekNo;
         }
 
         function getWeekStartDate(year, weekNo) {
-            const jan4 = new Date(year, 0, 4); // 4 января всегда в 1-й неделе
-            const jan4Day = jan4.getDay() === 0 ? 7 : jan4.getDay(); // День недели (1=пн, 7=вс)
+            const jan4 = new Date(year, 0, 4);
+            const jan4Day = jan4.getDay() === 0 ? 7 : jan4.getDay();
             const weekStart = new Date(jan4.valueOf());
             weekStart.setDate(jan4.getDate() - (jan4Day - 1) + (weekNo - 1) * 7);
             return weekStart;
@@ -569,6 +560,55 @@
             };
         }
 
+        // *** Функции для взаимодействия с Apps Script Web App ***
+        async function fetchTasks() {
+            try {
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                mockTasks = data; // Обновляем данные из таблицы
+                // Находим максимальный ID для генерации новых
+                if (mockTasks.length > 0) {
+                    nextTaskId = Math.max(...mockTasks.map(t => t.id).filter(id => typeof id === 'number' && !isNaN(id))) + 1; // Улучшенная фильтрация для ID
+                } else {
+                    nextTaskId = 1;
+                }
+                return mockTasks;
+            } catch (error) {
+                console.error("Ошибка при получении задач из Google Sheets:", error);
+                alert("Не удалось загрузить задачи из таблицы: " + error.message + ". Проверьте консоль для деталей.");
+                return [];
+            }
+        }
+
+        async function sendTaskToSheet(taskData, action) {
+            try {
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action: action, task: taskData, id: taskData.id }), // Для delete передаем только id
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                return data;
+            } catch (error) {
+                console.error(`Ошибка при ${action} задачи в Google Sheets:`, error);
+                alert(`Не удалось ${action === 'create' ? 'создать' : action === 'update' ? 'обновить' : 'удалить'} задачу в таблице: ` + error.message + ". Проверьте консоль для деталей.");
+                return { success: false, error: error.message };
+            }
+        }
 
         // *** Рендеринг задач ***
         const tasksNoDateContainer = document.getElementById('tasks-no-date');
@@ -576,18 +616,16 @@
         const blockOContainer = document.getElementById('block-o-container');
 
         function renderTasks(tasksToRender) {
-            // Очищаем все контейнеры
             tasksNoDateContainer.innerHTML = '';
             tasksTodayContainer.innerHTML = '';
             blockOContainer.innerHTML = '';
 
-            const weeklyColumns = {}; // Для группировки задач по неделям
+            const weeklyColumns = {};
 
             tasksToRender.forEach(task => {
                 const deadlineDate = task.deadline ? new Date(task.deadline) : null;
-                if (deadlineDate) deadlineDate.setHours(0, 0, 0, 0); // Нормализация дедлайна
+                if (deadlineDate) deadlineDate.setHours(0, 0, 0, 0);
 
-                // 6. Сначала задачи с датой "Сегодня", потом без даты
                 if (deadlineDate && deadlineDate.getTime() === TODAY.getTime()) {
                     tasksTodayContainer.appendChild(createTaskCard(task));
                 } else if (!task.startDate && !task.deadline) {
@@ -606,7 +644,6 @@
                 }
             });
 
-            // Сортировка недельных колонок по номеру недели
             const sortedWeeks = Object.keys(weeklyColumns).sort((a, b) => parseInt(a) - parseInt(b));
 
             sortedWeeks.forEach(weekNo => {
@@ -623,14 +660,13 @@
             });
         }
 
-        // 8. Создание карточки задачи (краткая информация)
         function createTaskCard(task) {
             const card = document.createElement('div');
             card.classList.add('task-card');
-            card.dataset.taskId = task.id; // Для идентификации задачи при клике
+            card.dataset.taskId = task.id;
 
             const deadline = task.deadline ? new Date(task.deadline) : null;
-            const isOverdue = deadline && deadline < TODAY && task.status !== 'Выполнено'; // Считаем просроченными, если дедлайн прошел и не выполнено
+            const isOverdue = deadline && deadline < TODAY && task.status !== 'Выполнено';
 
             let statusClass = '';
             if (task.status === 'В работе') statusClass = 'status';
@@ -638,11 +674,10 @@
             else if (task.status === 'Ожидание') statusClass = 'status waiting';
 
             card.innerHTML = `
-                <h3>${task.title}</h3>
+                <h3>${task.title || 'Задача без названия'}</h3>
                 <p>Категория: ${task.category || '---'}</p>
                 <p>Статус: <span class="${statusClass}">${task.status || '---'}</span></p>
                 <p>Дедлайн: <span class="${isOverdue ? 'deadline overdue' : 'deadline'}">${formatDate(task.deadline)}</span></p>
-                <!-- 10. Слово "Ответственный" заменено на "Исполнитель" -->
                 <p>Исполнитель: ${task.owner || '---'}</p>
             `;
             return card;
@@ -653,10 +688,9 @@
         const filterStatus = document.getElementById('filter-status');
         const filterOwner = document.getElementById('filter-owner');
         const filterOverdue = document.getElementById('filter-overdue');
-        const filterMyTasksButton = document.getElementById('filter-my-tasks'); // 4. Теперь это кнопка
+        const filterMyTasksButton = document.getElementById('filter-my-tasks');
         const filterReset = document.getElementById('filter-reset');
 
-        // Заполнение выпадающих списков фильтров
         function populateFilterDropdowns() {
             const categories = new Set(mockTasks.map(t => t.category).filter(Boolean));
             const statuses = new Set(mockTasks.map(t => t.status).filter(Boolean));
@@ -677,14 +711,12 @@
             });
         }
 
-        // Применение фильтров
         function applyFilters() {
             let filtered = [...mockTasks];
 
             const categoryVal = filterCategory.value;
             const statusVal = filterStatus.value;
             const ownerVal = filterOwner.value;
-            // 4. Проверка состояния кнопки "Мои"
             const onlyMyTasksActive = filterMyTasksButton.classList.contains('active');
             let showOverdueOnly = filterOverdue.classList.contains('active');
 
@@ -692,7 +724,6 @@
             if (statusVal) filtered = filtered.filter(task => task.status === statusVal);
             if (ownerVal) filtered = filtered.filter(task => task.owner === ownerVal);
 
-            // 4. Логика для кнопки "Мои"
             if (onlyMyTasksActive) {
                 filtered = filtered.filter(task => 
                     task.owner === "Я" && (task.status === "Запланировано" || task.status === "В работе")
@@ -706,7 +737,7 @@
                 });
             }
 
-            currentTasks = filtered; // Обновляем рабочую копию
+            currentTasks = filtered;
             renderTasks(currentTasks);
         }
 
@@ -727,8 +758,8 @@
         const deleteTaskButton = document.getElementById('delete-task-button');
 
         function openTaskModal(task = null) {
-            taskForm.reset(); // Сбросить форму перед открытием
-            deleteTaskButton.classList.add('hidden'); // Скрыть кнопку удаления по умолчанию
+            taskForm.reset();
+            deleteTaskButton.classList.add('hidden');
 
             if (task) {
                 modalTitle.textContent = "Редактировать задачу";
@@ -740,13 +771,12 @@
                 taskOwnerInput.value = task.owner;
                 taskStartDateInput.value = task.startDate;
                 taskDeadlineInput.value = task.deadline;
-                deleteTaskButton.classList.remove('hidden'); // Показать кнопку удаления для существующих задач
+                deleteTaskButton.classList.remove('hidden');
             } else {
                 modalTitle.textContent = "Создать новую задачу";
-                taskIdInput.value = ''; // Сбросить ID для новой задачи
+                taskIdInput.value = '';
 
-                // 4. Заполнение значений по умолчанию для новой задачи
-                const todayFormatted = TODAY.toISOString().split('T')[0]; // YYYY-MM-DD
+                const todayFormatted = TODAY.toISOString().split('T')[0];
                 const sevenDaysLater = new Date(TODAY);
                 sevenDaysLater.setDate(TODAY.getDate() + 7);
                 const sevenDaysLaterFormatted = sevenDaysLater.toISOString().split('T')[0];
@@ -757,21 +787,20 @@
                 taskEpicInput.value = "Работа";
                 taskStatusInput.value = "Запланировано";
             }
-            taskModal.style.display = 'flex'; // Показываем модальное окно
+            taskModal.style.display = 'flex';
         }
 
         function closeTaskModal() {
-            taskModal.style.display = 'none'; // Скрываем модальное окно
-            taskForm.reset(); // Очищаем форму
-            taskIdInput.value = ''; // Убеждаемся, что ID сброшен
+            taskModal.style.display = 'none';
+            taskForm.reset();
+            taskIdInput.value = '';
         }
 
-        // Сохранение/обновление задачи (пока без реального сохранения)
-        taskForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Предотвратить стандартную отправку формы
+        taskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
             const id = taskIdInput.value ? parseInt(taskIdInput.value) : null;
-            const newTaskData = {
+            const taskData = {
                 id: id,
                 title: taskTitleInput.value,
                 epic: taskEpicInput.value,
@@ -780,46 +809,48 @@
                 owner: taskOwnerInput.value,
                 startDate: taskStartDateInput.value,
                 deadline: taskDeadlineInput.value,
-                complexity: "---" // Пока оставляем статичным
+                complexity: "---"
             };
 
+            let result;
             if (id) {
-                // Обновление существующей задачи
-                const taskIndex = mockTasks.findIndex(t => t.id === id);
-                if (taskIndex > -1) {
-                    mockTasks[taskIndex] = { ...mockTasks[taskIndex], ...newTaskData };
-                }
+                result = await sendTaskToSheet(taskData, 'update');
             } else {
-                // Создание новой задачи
-                newTaskData.id = nextTaskId++;
-                mockTasks.push(newTaskData);
+                result = await sendTaskToSheet(taskData, 'create');
             }
             
-            closeTaskModal();
-            populateFilterDropdowns(); // Обновить фильтры, если появились новые категории/статусы/исполнители
-            applyFilters(); // Перерисовать задачи
-            alert('Задача сохранена/обновлена! (В данный момент данные не сохраняются между сессиями)');
-        });
-
-        // Удаление задачи (пока без реального удаления)
-        deleteTaskButton.addEventListener('click', () => {
-            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
-                const idToDelete = parseInt(taskIdInput.value);
-                mockTasks = mockTasks.filter(task => task.id !== idToDelete);
+            if (result.success) {
                 closeTaskModal();
-                populateFilterDropdowns();
-                applyFilters();
-                alert('Задача удалена! (В данный момент данные не сохраняются между сессиями)');
+                await initDataAndRender(); // Перезагружаем данные и рендерим
+                alert('Задача сохранена/обновлена в Google Таблице!');
             }
         });
 
+        deleteTaskButton.addEventListener('click', async () => {
+            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                const idToDelete = parseInt(taskIdInput.value);
+                const result = await sendTaskToSheet({ id: idToDelete }, 'delete'); // Передаем только id
+
+                if (result.success) {
+                    closeTaskModal();
+                    await initDataAndRender(); // Перезагружаем данные и рендерим
+                    alert('Задача удалена из Google Таблицы!');
+                }
+            }
+        });
+
+        // Функция для инициализации данных и рендеринга
+        async function initDataAndRender() {
+            await fetchTasks(); // Получаем свежие данные
+            populateFilterDropdowns();
+            applyFilters();
+        }
 
         // *** Инициализация приложения ***
         function initApp() {
-            populateFilterDropdowns();
-            applyFilters(); // Начальный рендеринг всех задач
+            // Вызываем initDataAndRender сразу после входа
+            initDataAndRender(); 
 
-            // Обработчики событий для фильтров
             filterCategory.addEventListener('change', applyFilters);
             filterStatus.addEventListener('change', applyFilters);
             filterOwner.addEventListener('change', applyFilters);
@@ -829,7 +860,6 @@
                 applyFilters();
             });
 
-            // 4. Обработчик для кнопки "Мои"
             filterMyTasksButton.addEventListener('click', () => {
                 filterMyTasksButton.classList.toggle('active');
                 applyFilters();
@@ -839,15 +869,13 @@
                 filterCategory.value = '';
                 filterStatus.value = '';
                 filterOwner.value = '';
-                filterMyTasksButton.classList.remove('active'); // 4. Сброс для кнопки
+                filterMyTasksButton.classList.remove('active');
                 filterOverdue.classList.remove('active');
                 applyFilters();
             });
 
-            // Обработчик для БЛОК ПЛЮС
             document.getElementById('block-plus').addEventListener('click', () => openTaskModal());
 
-            // Обработчик клика по карточкам задач (делегирование)
             document.getElementById('main-board').addEventListener('click', (e) => {
                 const card = e.target.closest('.task-card');
                 if (card) {
@@ -859,7 +887,6 @@
                 }
             });
 
-            // Закрытие модального окна по клику на крестик или вне окна
             closeButton.addEventListener('click', closeTaskModal);
             window.addEventListener('click', (e) => {
                 if (e.target === taskModal) {
