@@ -17,6 +17,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            overflow-y: auto; /* Для общей прокрутки страницы, если контента много по вертикали */
         }
 
         /* 1. БЛОК В - Верхняя часть */
@@ -46,6 +47,17 @@
             align-items: center;
         }
 
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .filter-group label {
+            font-size: 0.9em;
+            color: #bbb;
+            white-space: nowrap; /* Чтобы не переносилось */
+        }
+
         .filter-dropdown, .filter-button {
             padding: 8px 12px;
             border: 1px solid #444;
@@ -54,74 +66,20 @@
             color: #e0e0e0;
             font-size: 0.9em;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
         .filter-dropdown:hover, .filter-button:hover {
             background-color: #444;
         }
-
-        .filter-button:active {
-            background-color: #555;
-        }
-
-        /* Стиль для чекбокса "Только мои задачи" */
-        .filter-checkbox-container {
-            display: block;
-            position: relative;
-            padding-left: 25px;
-            cursor: pointer;
-            font-size: 0.9em;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        .filter-checkbox-container input {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-            height: 0;
-            width: 0;
-        }
-
-        .checkmark {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 18px;
-            width: 18px;
-            background-color: #333;
-            border: 1px solid #444;
-            border-radius: 3px;
-        }
-
-        .filter-checkbox-container input:checked ~ .checkmark {
+        .filter-button.active {
             background-color: #ffa500;
+            color: #1a1a1a;
             border-color: #ffa500;
         }
-
-        .checkmark:after {
-            content: "";
-            position: absolute;
-            display: none;
-        }
-
-        .filter-checkbox-container input:checked ~ .checkmark:after {
-            display: block;
-        }
-
-        .filter-checkbox-container .checkmark:after {
-            left: 6px;
-            top: 2px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            -webkit-transform: rotate(45deg);
-            -ms-transform: rotate(45deg);
-            transform: rotate(45deg);
+        .filter-button.active:hover {
+            background-color: #ff8c00;
+            border-color: #ff8c00;
         }
 
         /* Основная доска с задачами */
@@ -129,7 +87,7 @@
             display: flex;
             flex-grow: 1; /* Чтобы занимал все доступное пространство */
             padding: 0 15px 15px;
-            gap: 15px; /* Зазор между БЛОК Л и БЛОК О */
+            gap: 25px; /* Зазор между БЛОК Л и БЛОК О */
             overflow-x: auto; /* Прокрутка для колонок */
         }
         
@@ -139,19 +97,21 @@
             width: 280px; /* Фиксированная ширина */
             padding-right: 25px; /* Увеличиваем правый отступ для БЛОК Л */
             border-right: 1px solid rgba(255, 255, 255, 0.1); /* Едва заметная полоса */
-            margin-right: 10px; /* Дополнительный отступ */
         }
 
         #block-o-container {
             display: flex;
             gap: 15px; /* Зазор между колонками в БЛОК О */
+            flex-shrink: 0; /* Это важно, чтобы контейнер не сжимался */
         }
 
         .task-column {
             background-color: #2a2a2a;
             border-radius: 8px;
             padding: 10px;
-            min-width: 300px; /* Минимальная ширина для колонок задач */
+            /* 1. Ширина колонок одинаковая, чтобы помещалось 2 колонки */
+            width: 320px; /* Фиксированная ширина для колонок БЛОК О */
+            flex-shrink: 0; /* Не сжимать колонки */
             max-height: calc(100vh - 120px); /* Ограничение по высоте, чтобы не выходило за экран */
             overflow-y: auto; /* Прокрутка внутри колонки */
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
@@ -445,27 +405,34 @@
         <!-- 1. БЛОК В - Заголовок и фильтры -->
         <header id="block-v">
             <div class="filters">
-                <select id="filter-category" class="filter-dropdown"></select>
-                <select id="filter-status" class="filter-dropdown"></select>
-                <select id="filter-owner" class="filter-dropdown"></select>
+                <!-- 3. Добавлены наименования фильтров -->
+                <div class="filter-group">
+                    <label for="filter-category">Категория:</label>
+                    <select id="filter-category" class="filter-dropdown"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-status">Статус:</label>
+                    <select id="filter-status" class="filter-dropdown"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-owner">Исполнитель:</label>
+                    <select id="filter-owner" class="filter-dropdown"></select>
+                </div>
                 <button id="filter-overdue" class="filter-button">Просроченные</button>
-                <label class="filter-checkbox-container">
-                    <input type="checkbox" id="filter-my-tasks">
-                    <span class="checkmark"></span>
-                    Только мои задачи
-                </label>
+                <!-- 4. "Только мои задачи" заменено на кнопку "Мои" -->
+                <button id="filter-my-tasks" class="filter-button">Мои</button>
                 <button id="filter-reset" class="filter-button">Сбросить</button>
             </div>
             <h1 class="title">СВАЛКА</h1>
         </header>
 
         <div id="main-board">
-            <!-- 6. БЛОК Л - Задачи без даты и на сегодня -->
+            <!-- 2. БЛОК Л - Изменен порядок: "Сегодня" сначала, потом "Без даты" -->
             <aside id="block-l" class="task-column">
-                <h2 class="column-title">Без даты</h2>
-                <div class="task-list" id="tasks-no-date"></div>
-                <h2 class="column-title" style="margin-top: 25px;">Сегодня</h2>
+                <h2 class="column-title">Сегодня</h2>
                 <div class="task-list" id="tasks-today"></div>
+                <h2 class="column-title" style="margin-top: 25px;">Без даты</h2>
+                <div class="task-list" id="tasks-no-date"></div>
             </aside>
             <!-- 7. БЛОК О - Колонки с неделями (будут генерироваться JS) -->
             <div id="block-o-container">
@@ -486,6 +453,7 @@
                     <label for="task-title-input">Задача:</label>
                     <input type="text" id="task-title-input" required>
 
+                    <!-- 10. Удалены строки Эпик и Сложность из краткой информации, но в модалке остаются для редактирования -->
                     <label for="task-epic-input">Эпик:</label>
                     <input type="text" id="task-epic-input">
 
@@ -555,7 +523,7 @@
         let currentTasks = [...mockTasks]; // Рабочая копия для фильтрации
         let nextTaskId = mockTasks.length + 1; // ID для новых задач
 
-        // Глобальная переменная для сегодняшней даты
+        // Глобальная переменная для сегодняшней даты (для 6 и 8 пункта)
         const TODAY = new Date();
         TODAY.setHours(0, 0, 0, 0); // Нормализация к началу дня
 
@@ -619,10 +587,11 @@
                 const deadlineDate = task.deadline ? new Date(task.deadline) : null;
                 if (deadlineDate) deadlineDate.setHours(0, 0, 0, 0); // Нормализация дедлайна
 
-                if (!task.startDate && !task.deadline) {
-                    tasksNoDateContainer.appendChild(createTaskCard(task));
-                } else if (deadlineDate && deadlineDate.getTime() === TODAY.getTime()) {
+                // 6. Сначала задачи с датой "Сегодня", потом без даты
+                if (deadlineDate && deadlineDate.getTime() === TODAY.getTime()) {
                     tasksTodayContainer.appendChild(createTaskCard(task));
+                } else if (!task.startDate && !task.deadline) {
+                    tasksNoDateContainer.appendChild(createTaskCard(task));
                 } else if (task.deadline) {
                     const weekInfo = getWeekRange(task.deadline);
                     if (weekInfo) {
@@ -673,6 +642,7 @@
                 <p>Категория: ${task.category || '---'}</p>
                 <p>Статус: <span class="${statusClass}">${task.status || '---'}</span></p>
                 <p>Дедлайн: <span class="${isOverdue ? 'deadline overdue' : 'deadline'}">${formatDate(task.deadline)}</span></p>
+                <!-- 10. Слово "Ответственный" заменено на "Исполнитель" -->
                 <p>Исполнитель: ${task.owner || '---'}</p>
             `;
             return card;
@@ -683,7 +653,7 @@
         const filterStatus = document.getElementById('filter-status');
         const filterOwner = document.getElementById('filter-owner');
         const filterOverdue = document.getElementById('filter-overdue');
-        const filterMyTasks = document.getElementById('filter-my-tasks');
+        const filterMyTasksButton = document.getElementById('filter-my-tasks'); // 4. Теперь это кнопка
         const filterReset = document.getElementById('filter-reset');
 
         // Заполнение выпадающих списков фильтров
@@ -714,14 +684,16 @@
             const categoryVal = filterCategory.value;
             const statusVal = filterStatus.value;
             const ownerVal = filterOwner.value;
-            const onlyMyTasks = filterMyTasks.checked;
-            let showOverdueOnly = filterOverdue.classList.contains('active'); // Предполагаем класс 'active' для включенного фильтра
+            // 4. Проверка состояния кнопки "Мои"
+            const onlyMyTasksActive = filterMyTasksButton.classList.contains('active');
+            let showOverdueOnly = filterOverdue.classList.contains('active');
 
             if (categoryVal) filtered = filtered.filter(task => task.category === categoryVal);
             if (statusVal) filtered = filtered.filter(task => task.status === statusVal);
             if (ownerVal) filtered = filtered.filter(task => task.owner === ownerVal);
 
-            if (onlyMyTasks) {
+            // 4. Логика для кнопки "Мои"
+            if (onlyMyTasksActive) {
                 filtered = filtered.filter(task => 
                     task.owner === "Я" && (task.status === "Запланировано" || task.status === "В работе")
                 );
@@ -851,10 +823,15 @@
             filterCategory.addEventListener('change', applyFilters);
             filterStatus.addEventListener('change', applyFilters);
             filterOwner.addEventListener('change', applyFilters);
-            filterMyTasks.addEventListener('change', applyFilters);
             
             filterOverdue.addEventListener('click', () => {
                 filterOverdue.classList.toggle('active');
+                applyFilters();
+            });
+
+            // 4. Обработчик для кнопки "Мои"
+            filterMyTasksButton.addEventListener('click', () => {
+                filterMyTasksButton.classList.toggle('active');
                 applyFilters();
             });
 
@@ -862,7 +839,7 @@
                 filterCategory.value = '';
                 filterStatus.value = '';
                 filterOwner.value = '';
-                filterMyTasks.checked = false;
+                filterMyTasksButton.classList.remove('active'); // 4. Сброс для кнопки
                 filterOverdue.classList.remove('active');
                 applyFilters();
             });
