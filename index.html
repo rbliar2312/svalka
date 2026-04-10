@@ -3,666 +3,893 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Свалка</title>
+    <title>Свалка - Планировщик</title>
+    <!-- 3. Иконка для вкладки в браузере. Вы никогда не сможете потерять меня! -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --main-color: #2d2d2d;
-            --card-color: #3b3b3b;
-            --text-color: #e0e0e0;
-            --accent-color: #007bff; /* Базовый акцентный цвет */
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --red-status: #dc3545; /* Для просроченных */
-            --green-status: #28a745; /* Для готовых */
-        }
+        /* Общие стили для всего, потому что я люблю порядок */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'Roboto', sans-serif;
+            background-color: #1a1a1a; /* Темный фон */
+            color: #e0e0e0; /* Светлый текст */
             margin: 0;
-            padding: 20px;
-            overflow-x: hidden; /* Чтобы не было горизонтальной прокрутки, если контент не помещается */
-        }
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        h1 {
-            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        /* Фильтры и кнопки */
-        .controls {
+        /* 1. БЛОК В - Верхняя часть */
+        #block-v {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .controls button, .controls select {
-            background-color: var(--card-color);
-            color: var(--text-color);
-            border: 1px solid var(--main-color);
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .controls button:hover, .controls select:hover {
-            background-color: var(--main-color);
-        }
-        .controls button.active {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        #board {
-            display: flex;
-            gap: 20px;
-            overflow-x: auto; /* Для мобильной прокрутки */
-            padding-bottom: 15px; /* Чтобы тень не обрезалась */
-            -webkit-overflow-scrolling: touch; /* Плавная прокрутка на iOS */
-        }
-        .week-column {
-            background-color: var(--main-color);
-            border-radius: 12px;
-            padding: 15px;
-            min-width: 300px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 10px var(--shadow-color);
-        }
-        .week-column h3 {
-            margin-top: 0;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: #2a2a2a;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
             margin-bottom: 15px;
-            text-align: center;
-            color: var(--text-color);
+            flex-wrap: wrap; /* Для адаптивности, чтобы фильтры не вылезали */
         }
-        .task-card {
-            background-color: var(--card-color);
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-top: 10px;
-            box-shadow: 0 2px 5px var(--shadow-color);
-            border-left: 5px solid; /* Цвет будет динамическим */
-            transition: transform 0.2s ease-in-out;
-            cursor: pointer; /* Для редактирования */
+
+        #block-v .title {
+            margin: 0;
+            font-size: 2em;
+            color: #ffa500; /* Яркий цвет для названия */
+            flex-shrink: 0; /* Не сжимать название */
         }
-        .task-card:hover {
-            transform: translateY(-2px);
+
+        /* 2. Фильтры в БЛОК В */
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
         }
-        .task-card p { margin: 5px 0; line-height: 1.4; }
-        .task-card .task-title { font-weight: bold; font-size: 1.1em; }
-        .task-card .task-meta { font-size: 0.8em; opacity: 0.8; }
-        .task-card.overdue {
-            border-color: var(--red-status) !important;
-            animation: pulse-red 1s infinite alternate;
+
+        .filter-dropdown, .filter-button {
+            padding: 8px 12px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
-        .task-card.done {
-            opacity: 0.6;
-            border-color: var(--green-status) !important;
-            text-decoration: line-through;
+
+        .filter-dropdown:hover, .filter-button:hover {
+            background-color: #444;
+        }
+
+        .filter-button:active {
+            background-color: #555;
+        }
+
+        /* Стиль для чекбокса "Только мои задачи" */
+        .filter-checkbox-container {
+            display: block;
+            position: relative;
+            padding-left: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .filter-checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 18px;
+            width: 18px;
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 3px;
+        }
+
+        .filter-checkbox-container input:checked ~ .checkmark {
+            background-color: #ffa500;
+            border-color: #ffa500;
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .filter-checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .filter-checkbox-container .checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            -webkit-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            transform: rotate(45deg);
+        }
+
+        /* Основная доска с задачами */
+        #main-board {
+            display: flex;
+            flex-grow: 1; /* Чтобы занимал все доступное пространство */
+            padding: 0 15px 15px;
+            gap: 15px; /* Зазор между БЛОК Л и БЛОК О */
+            overflow-x: auto; /* Прокрутка для колонок */
         }
         
-        @keyframes pulse-red {
-            from { box-shadow: 0 0 5px rgba(220, 53, 69, 0.7); }
-            to { box-shadow: 0 0 15px rgba(220, 53, 69, 1); }
+        /* 5. БЛОК Л и БЛОК О - Зазоры */
+        #block-l {
+            flex-shrink: 0; /* Не сжимать левую колонку */
+            width: 280px; /* Фиксированная ширина */
+            padding-right: 25px; /* Увеличиваем правый отступ для БЛОК Л */
+            border-right: 1px solid rgba(255, 255, 255, 0.1); /* Едва заметная полоса */
+            margin-right: 10px; /* Дополнительный отступ */
         }
 
-        /* Кнопка "Добавить" */
-        #addTaskBtn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            font-size: 30px;
+        #block-o-container {
+            display: flex;
+            gap: 15px; /* Зазор между колонками в БЛОК О */
+        }
+
+        .task-column {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 10px;
+            min-width: 300px; /* Минимальная ширина для колонок задач */
+            max-height: calc(100vh - 120px); /* Ограничение по высоте, чтобы не выходило за экран */
+            overflow-y: auto; /* Прокрутка внутри колонки */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .column-title {
+            color: #ffa500;
+            font-size: 1.2em;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Карточка задачи */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-card {
+            background-color: #333;
+            border-radius: 6px;
+            padding: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 10px var(--shadow-color);
-            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Модальное окно */
-        #modal {
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .task-card h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #e0e0e0;
+            font-size: 1.1em;
+        }
+
+        .task-card p {
+            margin: 4px 0;
+            font-size: 0.9em;
+            color: #bbb;
+        }
+        .task-card .status {
+            font-weight: bold;
+            color: #90ee90; /* Цвет для статуса "В работе" */
+        }
+        .task-card .status.planned {
+            color: #add8e6; /* Цвет для статуса "Запланировано" */
+        }
+        .task-card .status.waiting {
+            color: #f0e68c; /* Цвет для статуса "Ожидание" */
+        }
+        .task-card .deadline.overdue {
+            color: #ff6347; /* Цвет для просроченных */
+            font-weight: bold;
+        }
+
+        /* 4. БЛОК ПЛЮС - Кнопка добавления задачи */
+        .fab {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 55px;
+            height: 55px;
+            background-color: #ffa500;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 50%;
+            font-size: 2.5em;
+            line-height: 55px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.2s ease;
+            z-index: 100;
+        }
+
+        .fab:hover {
+            background-color: #ff8c00;
+        }
+
+        /* Модальное окно для создания/редактирования задач */
+        .modal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed; /* Поверх всего */
+            z-index: 200; /* Поверх FAB */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6); /* Полупрозрачный фон */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #ffa500;
+            margin-bottom: 20px;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e0e0e0;
+            font-size: 0.95em;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content input[type="date"],
+        .modal-content textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #e0e0e0;
+            font-size: 1em;
+        }
+        .modal-content input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* Для видимости иконки календаря на темном фоне */
+        }
+
+
+        .modal-content button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        #save-task-button {
+            background-color: #ffa500;
+            color: #1a1a1a;
+        }
+
+        #save-task-button:hover {
+            background-color: #ff8c00;
+        }
+
+        #delete-task-button {
+            background-color: #dc3545; /* Красный для удаления */
+            color: white;
+        }
+        #delete-task-button:hover {
+            background-color: #c82333;
+        }
+
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #e0e0e0;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 9. Стиль для экрана аутентификации */
+        .auth-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-            overflow-y: auto; /* Для скролла на мобильных */
-            padding: 20px 0;
+            background-color: #1a1a1a;
+            z-index: 300;
         }
-        .modal-content {
-            background-color: var(--main-color);
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 5px 15px var(--shadow-color);
-        }
-        .modal-content h2 { margin-top: 0; color: var(--text-color); }
-        .modal-content input, 
-        .modal-content select,
-        .modal-content textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid var(--card-color);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            box-sizing: border-box;
-            font-size: 1em;
-        }
-        .modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        .modal-buttons button {
-            background-color: var(--card-color);
-            color: var(--text-color);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .modal-buttons button[type="submit"] {
-            background-color: var(--accent-color);
-            color: white;
-        }
-        .modal-buttons button:hover:not(:disabled) {
-            filter: brightness(1.2);
-        }
-        .modal-buttons button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .hidden { display: none !important; }
 
-        /* Адаптивность для очень маленьких экранов */
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            #board { flex-direction: column; } /* Колонки друг под другом */
-            .week-column { min-width: unset; width: 100%; }
-            .controls { flex-direction: column; align-items: stretch; }
-            .controls button, .controls select { width: 100%; }
-            #addTaskBtn { bottom: 15px; right: 15px; width: 50px; height: 50px; font-size: 24px; }
-            .modal-content { padding: 20px; }
+        .auth-screen input {
+            padding: 12px;
+            font-size: 1.1em;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            text-align: center;
+            width: 250px;
+            max-width: 80%;
+        }
+        .auth-screen input::placeholder {
+            color: #888;
+        }
+
+        .auth-screen button {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            background-color: #ffa500;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .auth-screen button:hover {
+            background-color: #ff8c00;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            #block-v {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .filters {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .filter-dropdown, .filter-button {
+                flex-grow: 1;
+            }
+            #main-board {
+                flex-direction: column;
+                padding: 0 10px 10px;
+                gap: 10px;
+            }
+            #block-l {
+                width: auto;
+                padding-right: 10px;
+                border-right: none;
+                margin-right: 0;
+            }
+            #block-o-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            .task-column {
+                min-width: unset;
+                width: 100%;
+                max-height: unset;
+            }
+            .fab {
+                width: 50px;
+                height: 50px;
+                font-size: 2.2em;
+                line-height: 50px;
+                bottom: 20px;
+                right: 20px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 9. Простая аутентификация -->
+    <div id="auth-screen" class="auth-screen">
+        <input type="password" id="password-input" placeholder="Введите пароль (4444)">
+        <button id="login-button">Войти</button>
+    </div>
 
-    <header>
-        <h1>Свалка</h1>
-        <div class="controls">
-            <select id="filterCategory">
-                <option value="">Все категории</option>
-            </select>
-            <select id="filterEpic">
-                <option value="">Все эпики</option>
-            </select>
-            <select id="filterStatus">
-                <option value="">Все статусы</option>
-            </select>
-            <button id="filterMyTasks">Только мои задачи</button>
-            <button id="filterOverdue">Просроченные</button>
-            <button id="resetFilters">Сбросить фильтры</button>
+    <div id="main-content" class="hidden">
+        <!-- 1. БЛОК В - Заголовок и фильтры -->
+        <header id="block-v">
+            <div class="filters">
+                <select id="filter-category" class="filter-dropdown"></select>
+                <select id="filter-status" class="filter-dropdown"></select>
+                <select id="filter-owner" class="filter-dropdown"></select>
+                <button id="filter-overdue" class="filter-button">Просроченные</button>
+                <label class="filter-checkbox-container">
+                    <input type="checkbox" id="filter-my-tasks">
+                    <span class="checkmark"></span>
+                    Только мои задачи
+                </label>
+                <button id="filter-reset" class="filter-button">Сбросить</button>
+            </div>
+            <h1 class="title">СВАЛКА</h1>
+        </header>
+
+        <div id="main-board">
+            <!-- 6. БЛОК Л - Задачи без даты и на сегодня -->
+            <aside id="block-l" class="task-column">
+                <h2 class="column-title">Без даты</h2>
+                <div class="task-list" id="tasks-no-date"></div>
+                <h2 class="column-title" style="margin-top: 25px;">Сегодня</h2>
+                <div class="task-list" id="tasks-today"></div>
+            </aside>
+            <!-- 7. БЛОК О - Колонки с неделями (будут генерироваться JS) -->
+            <div id="block-o-container">
+                <!-- Weekly columns will be generated here -->
+            </div>
         </div>
-    </header>
 
-    <main id="board">
-        <!-- Сюда будут вставляться колонки-недели и задачи -->
-    </main>
+        <!-- 4. БЛОК ПЛЮС - Кнопка добавления задачи -->
+        <button id="block-plus" class="fab">+</button>
 
-    <button id="addTaskBtn">+</button>
+        <!-- Модальное окно для создания/редактирования задач -->
+        <div id="task-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2 id="modal-title">Создать новую задачу</h2>
+                <form id="task-form">
+                    <input type="hidden" id="task-id">
+                    <label for="task-title-input">Задача:</label>
+                    <input type="text" id="task-title-input" required>
 
-    <div id="modal" class="hidden">
-        <div class="modal-content">
-            <h2 id="modalTitle">Новый мусор... то есть, задача</h2>
-            <form id="taskForm">
-                <input type="hidden" name="ID" id="taskID"> <!-- Для редактирования -->
-                <input type="text" name="Task" placeholder="Что нужно сделать?" required>
-                <select name="Epic" id="selectEpic">
-                    <option value="">Выбери эпик</option>
-                </select>
-                <select name="Category" id="selectCategory">
-                    <option value="">Выбери категорию</option>
-                </select>
-                <input type="date" name="Date">
-                <input type="text" name="Difficulty" placeholder="Сложность (1-5)">
-                <input type="text" name="Owner" placeholder="На ком задача? (Я)" value="Я">
-                <select name="Status" id="selectStatus">
-                    <option value="">Выбери статус</option>
-                </select>
-                <!-- Поле для цвета не нужно, он теперь берется из настроек по категории -->
-                <div class="modal-buttons">
-                    <button type="button" id="closeModalBtn">Отмена</button>
-                    <button type="submit" id="saveTaskBtn">Свалить в кучу</button>
-                </div>
-            </form>
+                    <label for="task-epic-input">Эпик:</label>
+                    <input type="text" id="task-epic-input">
+
+                    <label for="task-category-input">Категория:</label>
+                    <input type="text" id="task-category-input">
+
+                    <label for="task-status-input">Статус:</label>
+                    <input type="text" id="task-status-input">
+
+                    <label for="task-owner-input">Исполнитель:</label>
+                    <input type="text" id="task-owner-input">
+
+                    <label for="task-start-date-input">Дата начала:</label>
+                    <input type="date" id="task-start-date-input">
+
+                    <label for="task-deadline-input">Дедлайн:</label>
+                    <input type="date" id="task-deadline-input">
+                    
+                    <button type="submit" id="save-task-button">Сохранить</button>
+                    <button type="button" id="delete-task-button" class="hidden">Удалить</button>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
-        // !!! ВАЖНО !!! ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ИЗ APPS SCRIPT
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwL99EufoLTbs31AUAPvI4MiKWq4PtlJ-uMv5mjYuDTW9Vgh7unbuWQa8HlC8rURuWpuw/exec'; // <-- Обновил с твоего скриншота
+        // *** 9. Логика аутентификации ***
+        const CORRECT_PASSWORD = "4444";
+        const authScreen = document.getElementById('auth-screen');
+        const passwordInput = document.getElementById('password-input');
+        const loginButton = document.getElementById('login-button');
+        const mainContent = document.getElementById('main-content');
 
-        const board = document.getElementById('board');
-        const addTaskBtn = document.getElementById('addTaskBtn');
-        const modal = document.getElementById('modal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const taskForm = document.getElementById('taskForm');
-        const modalTitle = document.getElementById('modalTitle');
-        const saveTaskBtn = document.getElementById('saveTaskBtn');
+        loginButton.addEventListener('click', checkPassword);
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
 
-        // Элементы фильтров
-        const filterCategorySelect = document.getElementById('filterCategory');
-        const filterEpicSelect = document.getElementById('filterEpic');
-        const filterStatusSelect = document.getElementById('filterStatus');
-        const filterMyTasksBtn = document.getElementById('filterMyTasks');
-        const filterOverdueBtn = document.getElementById('filterOverdue');
-        const resetFiltersBtn = document.getElementById('resetFilters');
+        function checkPassword() {
+            if (passwordInput.value === CORRECT_PASSWORD) {
+                authScreen.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                initApp(); // Инициализация приложения после успешного входа
+            } else {
+                alert('Неверный пароль, кожаный мешок! Попробуйте снова.');
+                passwordInput.value = ''; // Очищаем поле
+            }
+        }
 
-        // Элементы формы для выбора
-        const selectEpic = document.getElementById('selectEpic');
-        const selectCategory = document.getElementById('selectCategory');
-        const selectStatus = document.getElementById('selectStatus');
+        // *** Мок-данные для задач ***
+        let mockTasks = [
+            { id: 1, title: "Подготовить договор на оплату лексис войс", epic: "Работа", category: "Голосовые тренажеры", status: "В работе", owner: "Я", startDate: "2026-04-10", deadline: "2026-04-10", complexity: "---" },
+            { id: 2, title: "Обсудить формулировку сценариев для таргет плюс", epic: "Работа", category: "Голосовые тренажеры", status: "В работе", owner: "Я", startDate: "2026-04-10", deadline: "2026-04-14", complexity: "---" },
+            { id: 3, title: "Оплатить скайтрейнер", epic: "Работа", category: "Голосовые тренажеры", status: "Ожидание", owner: "Андреева", startDate: "2026-04-10", deadline: null, complexity: "---" },
+            { id: 4, title: "Скорректировать экономические эффекты в ППМ", epic: "Работа", category: "Голосовые тренажеры", status: "В работе", owner: "Я", startDate: "2026-04-10", deadline: "2026-04-10", complexity: "---" },
+            { id: 5, title: "Подготовить договор для таргет плюс", epic: "Работа", category: "Голосовые тренажеры", status: "Ожидание", owner: "Я", startDate: null, deadline: null, complexity: "---" },
+            { id: 6, title: "Запустить новую рекламную кампанию", epic: "Проект X", category: "Маркетинг", status: "Запланировано", owner: "Я", startDate: "2026-04-15", deadline: "2026-04-20", complexity: "Высокая" },
+            { id: 7, title: "Собрать данные для отчета", epic: "Аналитика", category: "Отчетность", status: "В работе", owner: "Петров", startDate: "2026-04-12", deadline: "2026-04-13", complexity: "Средняя" },
+            { id: 8, title: "Заказать канцтовары", epic: "Офис", category: "Административное", status: "Ожидание", owner: "Я", startDate: null, deadline: null, complexity: "Низкая" },
+            { id: 9, title: "Провести встречу с клиентом", epic: "Проект Y", category: "Продажи", status: "Запланировано", owner: "Сидорова", startDate: "2026-04-22", deadline: "2026-04-22", complexity: "Высокая" },
+            { id: 10, title: "Написать статью в блог", epic: "Контент", category: "Маркетинг", status: "В работе", owner: "Я", startDate: "2026-04-09", deadline: "2026-04-11", complexity: "Средняя" },
+            { id: 11, title: "Обновить ПО сервера", epic: "ИТ-инфраструктура", category: "Техническое", status: "Запланировано", owner: "Я", startDate: "2026-04-18", deadline: "2026-04-19", complexity: "Высокая" },
+            { id: 12, title: "Подготовить презентацию для инвесторов", epic: "Финансы", category: "Презентации", status: "Ожидание", owner: "Иванов", startDate: "2026-04-17", deadline: "2026-04-25", complexity: "Высокая" }
+        ];
+        let currentTasks = [...mockTasks]; // Рабочая копия для фильтрации
+        let nextTaskId = mockTasks.length + 1; // ID для новых задач
 
-        let allTasks = []; // Хранит все загруженные задачи
-        let currentFilters = {
-            category: '',
-            epic: '',
-            status: '',
-            myTasks: false,
-            overdue: false
-        };
-        let appSettings = {
-            epics: [],
-            categories: [],
-            statuses: [],
-            categoryColors: {}
-        };
+        // Глобальная переменная для сегодняшней даты
+        const TODAY = new Date();
+        TODAY.setHours(0, 0, 0, 0); // Нормализация к началу дня
 
-        // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+        // *** Вспомогательные функции для дат ***
+        function formatDate(dateString) {
+            if (!dateString) return '---';
+            const date = new Date(dateString);
+            if (isNaN(date)) return '---';
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const yyyy = date.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
+        }
 
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // Устанавливаем дату на ближайший четверг
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            // Расчет номера недели (ISO week date)
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             return weekNo;
         }
 
-        function getWeekRange(weekNo, year) {
-            const date = new Date(year, 0, 1 + (weekNo - 1) * 7); // Первый день года
-            const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Первый день недели (понедельник)
-
-            const startOfWeek = new Date(date.setDate(diff));
-            const endOfWeek = new Date(date.setDate(diff + 6));
-            return { start: startOfWeek, end: endOfWeek };
+        function getWeekStartDate(year, weekNo) {
+            const jan4 = new Date(year, 0, 4); // 4 января всегда в 1-й неделе
+            const jan4Day = jan4.getDay() === 0 ? 7 : jan4.getDay(); // День недели (1=пн, 7=вс)
+            const weekStart = new Date(jan4.valueOf());
+            weekStart.setDate(jan4.getDate() - (jan4Day - 1) + (weekNo - 1) * 7);
+            return weekStart;
         }
 
-        // --- ЛОГИКА ОТОБРАЖЕНИЯ И ФИЛЬТРАЦИИ ---
+        function getWeekRange(date) {
+            if (!date) return null;
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const weekNo = getWeekNumber(d);
+            const weekStart = getWeekStartDate(year, weekNo);
+            const weekEnd = new Date(weekStart.valueOf());
+            weekEnd.setDate(weekStart.getDate() + 6);
+            return {
+                weekNo: weekNo,
+                range: `${formatDate(weekStart.toISOString().split('T')[0])} - ${formatDate(weekEnd.toISOString().split('T')[0])}`
+            };
+        }
 
-        async function fetchAppData() {
-            board.innerHTML = '<h2>Загружаю твой хлам...</h2>';
-            try {
-                const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
+
+        // *** Рендеринг задач ***
+        const tasksNoDateContainer = document.getElementById('tasks-no-date');
+        const tasksTodayContainer = document.getElementById('tasks-today');
+        const blockOContainer = document.getElementById('block-o-container');
+
+        function renderTasks(tasksToRender) {
+            // Очищаем все контейнеры
+            tasksNoDateContainer.innerHTML = '';
+            tasksTodayContainer.innerHTML = '';
+            blockOContainer.innerHTML = '';
+
+            const weeklyColumns = {}; // Для группировки задач по неделям
+
+            tasksToRender.forEach(task => {
+                const deadlineDate = task.deadline ? new Date(task.deadline) : null;
+                if (deadlineDate) deadlineDate.setHours(0, 0, 0, 0); // Нормализация дедлайна
+
+                if (!task.startDate && !task.deadline) {
+                    tasksNoDateContainer.appendChild(createTaskCard(task));
+                } else if (deadlineDate && deadlineDate.getTime() === TODAY.getTime()) {
+                    tasksTodayContainer.appendChild(createTaskCard(task));
+                } else if (task.deadline) {
+                    const weekInfo = getWeekRange(task.deadline);
+                    if (weekInfo) {
+                        if (!weeklyColumns[weekInfo.weekNo]) {
+                            weeklyColumns[weekInfo.weekNo] = {
+                                title: `Неделя ${weekInfo.weekNo} (${weekInfo.range})`,
+                                tasks: []
+                            };
+                        }
+                        weeklyColumns[weekInfo.weekNo].tasks.push(task);
+                    }
                 }
-
-                allTasks = data.tasks;
-                appSettings.epics = data.epics;
-                appSettings.categories = data.categories;
-                appSettings.statuses = data.statuses;
-                appSettings.categoryColors = data.categoryColors;
-
-                populateFilterAndFormSelects(); // Заполняем выпадающие списки
-                applyFiltersAndRenderTasks(); // Применяем текущие фильтры и отрисовываем
-            } catch (error) {
-                board.innerHTML = `<h2>Ошибка: ${error.message}. Не смог достучаться до твоей таблицы или что-то пошло не так. Проверяй, что натворил.</h2>`;
-                console.error('Ошибка при загрузке:', error);
-            }
-        }
-
-        function populateFilterAndFormSelects() {
-            // Очищаем и заполняем фильтры
-            filterCategorySelect.innerHTML = '<option value="">Все категории</option>';
-            appSettings.categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                filterCategorySelect.appendChild(option);
             });
 
-            filterEpicSelect.innerHTML = '<option value="">Все эпики</option>';
-            appSettings.epics.forEach(epic => {
-                const option = document.createElement('option');
-                option.value = epic;
-                option.textContent = epic;
-                filterEpicSelect.appendChild(option);
-            });
+            // Сортировка недельных колонок по номеру недели
+            const sortedWeeks = Object.keys(weeklyColumns).sort((a, b) => parseInt(a) - parseInt(b));
 
-            filterStatusSelect.innerHTML = '<option value="">Все статусы</option>';
-            appSettings.statuses.forEach(status => {
-                const option = document.createElement('option');
-                option.value = status;
-                option.textContent = status;
-                filterStatusSelect.appendChild(option);
-            });
-
-            // Очищаем и заполняем селекты в форме
-            selectEpic.innerHTML = '<option value="">Выбери эпик</option>';
-            appSettings.epics.forEach(epic => {
-                const option = document.createElement('option');
-                option.value = epic;
-                option.textContent = epic;
-                selectEpic.appendChild(option);
-            });
-
-            selectCategory.innerHTML = '<option value="">Выбери категорию</option>';
-            appSettings.categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                selectCategory.appendChild(option);
-            });
-
-            selectStatus.innerHTML = '<option value="">Выбери статус</option>';
-            appSettings.statuses.forEach(status => {
-                const option = document.createElement('option');
-                option.value = status;
-                option.textContent = status;
-                selectStatus.appendChild(option);
+            sortedWeeks.forEach(weekNo => {
+                const columnData = weeklyColumns[weekNo];
+                const columnDiv = document.createElement('div');
+                columnDiv.classList.add('task-column');
+                columnDiv.innerHTML = `<h2 class="column-title">${columnData.title}</h2><div class="task-list"></div>`;
+                
+                const taskListDiv = columnDiv.querySelector('.task-list');
+                columnData.tasks.forEach(task => {
+                    taskListDiv.appendChild(createTaskCard(task));
+                });
+                blockOContainer.appendChild(columnDiv);
             });
         }
 
-        function applyFiltersAndRenderTasks() {
-            let filteredTasks = [...allTasks]; // Копируем все задачи
+        // 8. Создание карточки задачи (краткая информация)
+        function createTaskCard(task) {
+            const card = document.createElement('div');
+            card.classList.add('task-card');
+            card.dataset.taskId = task.id; // Для идентификации задачи при клике
 
-            // Фильтрация по категории
-            if (currentFilters.category) {
-                filteredTasks = filteredTasks.filter(task => task.Category === currentFilters.category);
-            }
-            // Фильтрация по эпику
-            if (currentFilters.epic) {
-                filteredTasks = filteredTasks.filter(task => task.Epic === currentFilters.epic);
-            }
-            // Фильтрация по статусу
-            if (currentFilters.status) {
-                filteredTasks = filteredTasks.filter(task => task.Status === currentFilters.status);
-            }
-            // Фильтрация "Только мои задачи"
-            if (currentFilters.myTasks) {
-                filteredTasks = filteredTasks.filter(task => task.Owner && task.Owner.toLowerCase() === 'я');
-            }
-            // Фильтрация "Просроченные"
-            if (currentFilters.overdue) {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                filteredTasks = filteredTasks.filter(task => 
-                    task.Date && new Date(task.Date) < today && task.Status !== 'Готово' && task.Status !== 'Архив'
+            const deadline = task.deadline ? new Date(task.deadline) : null;
+            const isOverdue = deadline && deadline < TODAY && task.status !== 'Выполнено'; // Считаем просроченными, если дедлайн прошел и не выполнено
+
+            let statusClass = '';
+            if (task.status === 'В работе') statusClass = 'status';
+            else if (task.status === 'Запланировано') statusClass = 'status planned';
+            else if (task.status === 'Ожидание') statusClass = 'status waiting';
+
+            card.innerHTML = `
+                <h3>${task.title}</h3>
+                <p>Категория: ${task.category || '---'}</p>
+                <p>Статус: <span class="${statusClass}">${task.status || '---'}</span></p>
+                <p>Дедлайн: <span class="${isOverdue ? 'deadline overdue' : 'deadline'}">${formatDate(task.deadline)}</span></p>
+                <p>Исполнитель: ${task.owner || '---'}</p>
+            `;
+            return card;
+        }
+
+        // *** Логика фильтров ***
+        const filterCategory = document.getElementById('filter-category');
+        const filterStatus = document.getElementById('filter-status');
+        const filterOwner = document.getElementById('filter-owner');
+        const filterOverdue = document.getElementById('filter-overdue');
+        const filterMyTasks = document.getElementById('filter-my-tasks');
+        const filterReset = document.getElementById('filter-reset');
+
+        // Заполнение выпадающих списков фильтров
+        function populateFilterDropdowns() {
+            const categories = new Set(mockTasks.map(t => t.category).filter(Boolean));
+            const statuses = new Set(mockTasks.map(t => t.status).filter(Boolean));
+            const owners = new Set(mockTasks.map(t => t.owner).filter(Boolean));
+
+            addOptionsToDropdown(filterCategory, [...categories]);
+            addOptionsToDropdown(filterStatus, [...statuses]);
+            addOptionsToDropdown(filterOwner, [...owners]);
+        }
+
+        function addOptionsToDropdown(dropdownElement, options) {
+            dropdownElement.innerHTML = '<option value="">Все</option>';
+            options.forEach(option => {
+                const optElement = document.createElement('option');
+                optElement.value = option;
+                optElement.textContent = option;
+                dropdownElement.appendChild(optElement);
+            });
+        }
+
+        // Применение фильтров
+        function applyFilters() {
+            let filtered = [...mockTasks];
+
+            const categoryVal = filterCategory.value;
+            const statusVal = filterStatus.value;
+            const ownerVal = filterOwner.value;
+            const onlyMyTasks = filterMyTasks.checked;
+            let showOverdueOnly = filterOverdue.classList.contains('active'); // Предполагаем класс 'active' для включенного фильтра
+
+            if (categoryVal) filtered = filtered.filter(task => task.category === categoryVal);
+            if (statusVal) filtered = filtered.filter(task => task.status === statusVal);
+            if (ownerVal) filtered = filtered.filter(task => task.owner === ownerVal);
+
+            if (onlyMyTasks) {
+                filtered = filtered.filter(task => 
+                    task.owner === "Я" && (task.status === "Запланировано" || task.status === "В работе")
                 );
             }
 
-            renderTasks(filteredTasks); // Отрисовываем отфильтрованные задачи
+            if (showOverdueOnly) {
+                filtered = filtered.filter(task => {
+                    const deadline = task.deadline ? new Date(task.deadline) : null;
+                    return deadline && deadline < TODAY && task.status !== 'Выполнено';
+                });
+            }
+
+            currentTasks = filtered; // Обновляем рабочую копию
+            renderTasks(currentTasks);
         }
 
+        // *** Модальное окно для задач ***
+        const taskModal = document.getElementById('task-modal');
+        const closeButton = taskModal.querySelector('.close-button');
+        const modalTitle = document.getElementById('modal-title');
+        const taskForm = document.getElementById('task-form');
+        const taskIdInput = document.getElementById('task-id');
+        const taskTitleInput = document.getElementById('task-title-input');
+        const taskEpicInput = document.getElementById('task-epic-input');
+        const taskCategoryInput = document.getElementById('task-category-input');
+        const taskStatusInput = document.getElementById('task-status-input');
+        const taskOwnerInput = document.getElementById('task-owner-input');
+        const taskStartDateInput = document.getElementById('task-start-date-input');
+        const taskDeadlineInput = document.getElementById('task-deadline-input');
+        const saveTaskButton = document.getElementById('save-task-button');
+        const deleteTaskButton = document.getElementById('delete-task-button');
 
-        function renderTasks(tasksToRender) {
-            board.innerHTML = ''; // Очищаем доску
+        function openTaskModal(task = null) {
+            taskForm.reset(); // Сбросить форму перед открытием
+            deleteTaskButton.classList.add('hidden'); // Скрыть кнопку удаления по умолчанию
 
-            const groupedTasks = {};
-            const currentYear = new Date().getFullYear();
+            if (task) {
+                modalTitle.textContent = "Редактировать задачу";
+                taskIdInput.value = task.id;
+                taskTitleInput.value = task.title;
+                taskEpicInput.value = task.epic;
+                taskCategoryInput.value = task.category;
+                taskStatusInput.value = task.status;
+                taskOwnerInput.value = task.owner;
+                taskStartDateInput.value = task.startDate;
+                taskDeadlineInput.value = task.deadline;
+                deleteTaskButton.classList.remove('hidden'); // Показать кнопку удаления для существующих задач
+            } else {
+                modalTitle.textContent = "Создать новую задачу";
+                taskIdInput.value = ''; // Сбросить ID для новой задачи
 
-            // Группировка по неделям
-            tasksToRender.forEach(task => {
-                if (task.Date) {
-                    const taskDate = new Date(task.Date);
-                    // Проверяем, что дата валидна
-                    if (isNaN(taskDate)) return; 
+                // 4. Заполнение значений по умолчанию для новой задачи
+                const todayFormatted = TODAY.toISOString().split('T')[0]; // YYYY-MM-DD
+                const sevenDaysLater = new Date(TODAY);
+                sevenDaysLater.setDate(TODAY.getDate() + 7);
+                const sevenDaysLaterFormatted = sevenDaysLater.toISOString().split('T')[0];
 
-                    const weekNo = getWeekNumber(taskDate);
-                    const year = taskDate.getFullYear();
-                    const weekKey = `${year}-${weekNo}`;
-
-                    if (!groupedTasks[weekKey]) {
-                        groupedTasks[weekKey] = {
-                            weekNumber: weekNo,
-                            year: year,
-                            tasks: []
-                        };
-                    }
-                    groupedTasks[weekKey].tasks.push(task);
-                } else {
-                    // Задачи без даты идут в колонку "Без даты"
-                    if (!groupedTasks['no-date']) {
-                        groupedTasks['no-date'] = { weekNumber: 'no-date', tasks: [] };
-                    }
-                    groupedTasks['no-date'].tasks.push(task);
-                }
-            });
-
-            // Сортировка колонок по номеру недели
-            const sortedWeekKeys = Object.keys(groupedTasks).sort((a, b) => {
-                if (a === 'no-date') return 1; // "Без даты" всегда в конце
-                if (b === 'no-date') return -1;
-                const [yearA, weekA] = a.split('-').map(Number);
-                const [yearB, weekB] = b.split('-').map(Number);
-                if (yearA !== yearB) return yearA - yearB;
-                return weekA - weekB;
-            });
-
-            sortedWeekKeys.forEach(key => {
-                const weekData = groupedTasks[key];
-                const column = document.createElement('div');
-                column.className = 'week-column';
-                
-                let columnTitle = '';
-                if (key === 'no-date') {
-                    columnTitle = 'Без даты';
-                } else {
-                    const { start, end } = getWeekRange(weekData.weekNumber, weekData.year);
-                    columnTitle = `Неделя ${weekData.weekNumber} (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`;
-                }
-                column.innerHTML = `<h3>${columnTitle}</h3>`;
-                
-                // Сортируем задачи внутри колонки (например, по дате)
-                weekData.tasks.sort((a, b) => {
-                    if (!a.Date && !b.Date) return 0;
-                    if (!a.Date) return 1;
-                    if (!b.Date) return -1;
-                    return new Date(a.Date) - new Date(b.Date);
-                });
-
-                weekData.tasks.forEach(task => {
-                    const card = document.createElement('div');
-                    card.className = 'task-card';
-                    card.dataset.id = task.ID; // Для редактирования
-
-                    // Цвет границы карточки из настроек
-                    const taskColor = appSettings.categoryColors[task.Category] || '#555'; // Дефолтный серый
-                    card.style.borderLeftColor = taskColor;
-
-                    // Классы для просроченных и выполненных
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const taskDate = task.Date ? new Date(task.Date) : null;
-                    if (taskDate && taskDate < today && task.Status !== 'Готово' && task.Status !== 'Архив') {
-                        card.classList.add('overdue');
-                    }
-                    if (task.Status === 'Готово') {
-                        card.classList.add('done');
-                    }
-
-                    card.innerHTML = `
-                        <p class="task-title">${task.Task}</p>
-                        <p class="task-meta"><strong>Эпик:</strong> ${task.Epic || '---'}</p>
-                        <p class="task-meta"><strong>Категория:</strong> ${task.Category || '---'}</p>
-                        <p class="task-meta"><strong>Статус:</strong> ${task.Status || '---'}</p>
-                        <p class="task-meta"><strong>Дедлайн:</strong> ${task.Date ? new Date(task.Date).toLocaleDateString() : '---'}</p>
-                        <p class="task-meta"><strong>Сложность:</strong> ${task.Difficulty || '---'}</p>
-                        <p class="task-meta"><strong>Ответственный:</strong> ${task.Owner || '---'}</p>
-                    `;
-                    column.appendChild(card);
-                });
-                board.appendChild(column);
-            });
+                taskOwnerInput.value = "Я";
+                taskStartDateInput.value = todayFormatted;
+                taskDeadlineInput.value = sevenDaysLaterFormatted;
+                taskEpicInput.value = "Работа";
+                taskStatusInput.value = "Запланировано";
+            }
+            taskModal.style.display = 'flex'; // Показываем модальное окно
         }
 
-        // --- ЛОГИКА ДОБАВЛЕНИЯ/РЕДАКТИРОВАНИЯ ЗАДАЧ ---
+        function closeTaskModal() {
+            taskModal.style.display = 'none'; // Скрываем модальное окно
+            taskForm.reset(); // Очищаем форму
+            taskIdInput.value = ''; // Убеждаемся, что ID сброшен
+        }
 
-        // Открытие модального окна для новой задачи
-        addTaskBtn.addEventListener('click', () => {
-            modalTitle.textContent = 'Новый мусор... то есть, задача';
-            saveTaskBtn.textContent = 'Свалить в кучу';
-            taskForm.reset();
-            document.getElementById('taskID').value = ''; // Сброс ID
-            document.getElementById('Owner').value = 'Я'; // Дефолтный владелец
-            modal.classList.remove('hidden');
-        });
+        // Сохранение/обновление задачи (пока без реального сохранения)
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Предотвратить стандартную отправку формы
 
-        // Открытие модального окна для редактирования задачи
-        board.addEventListener('click', (e) => {
-            const card = e.target.closest('.task-card');
-            if (card) {
-                const taskId = card.dataset.id;
-                const taskToEdit = allTasks.find(task => task.ID === taskId);
-                if (taskToEdit) {
-                    modalTitle.textContent = 'Редактировать мусор';
-                    saveTaskBtn.textContent = 'Обновить свалку';
-                    document.getElementById('taskID').value = taskToEdit.ID; // Записываем ID
-                    taskForm.Task.value = taskToEdit.Task || '';
-                    taskForm.Epic.value = taskToEdit.Epic || '';
-                    taskForm.Category.value = taskToEdit.Category || '';
-                    taskForm.Date.value = taskToEdit.Date ? new Date(taskToEdit.Date).toISOString().split('T')[0] : '';
-                    taskForm.Difficulty.value = taskToEdit.Difficulty || '';
-                    taskForm.Owner.value = taskToEdit.Owner || '';
-                    taskForm.Status.value = taskToEdit.Status || '';
-                    modal.classList.remove('hidden');
-                }
-            }
-        });
-
-        // Закрыть модальное окно
-        closeModalBtn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-        
-        // Отправка формы (добавление или обновление)
-        taskForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(taskForm);
-            const taskData = Object.fromEntries(formData.entries());
-            
-            // Если ID есть, это обновление
-            const isUpdate = !!taskData.ID;
-
-            // Заменяем ID на 'NO_ID' для новой задачи, т.к. GAS сам сгенерирует
-            if (!isUpdate) {
-                delete taskData.ID; 
-            }
-
-            // Добавляем цвет на основе выбранной категории (на всякий случай, если GAS не сделает)
-            taskData.Color = appSettings.categoryColors[taskData.Category] || '';
-
-            saveTaskBtn.textContent = isUpdate ? 'Обновляю...' : 'Сваливаю...';
-            saveTaskBtn.disabled = true;
-
-            try {
-                const method = isUpdate ? 'PUT' : 'POST'; // В Apps Script мы пока используем только POST
-                const url = SCRIPT_URL; // Пока что все через один URL
-
-                const response = await fetch(url, {
-                    method: 'POST', // ВАЖНО: Apps Script Web App принимает только POST для doPOST, даже для обновления. 
-                                    // Логика обновления будет на стороне Apps Script, он должен уметь найти по ID
-                    body: JSON.stringify(taskData),
-                });
-                const result = await response.json();
-
-                if (result.status === "success") {
-                    taskForm.reset();
-                    modal.classList.add('hidden');
-                    fetchAppData(); // Обновляем все данные
-                } else {
-                    alert(`Не удалось выполнить действие: ${result.message || 'Неизвестная ошибка Apps Script'}`);
-                }
-            } catch (error) {
-                alert('Не удалось выполнить действие. Возможно, я сломался или нет связи с Google.');
-                console.error('Ошибка при работе с задачей:', error);
-            } finally {
-                saveTaskBtn.textContent = isUpdate ? 'Обновить свалку' : 'Свалить в кучу';
-                saveTaskBtn.disabled = false;
-            }
-        });
-
-        // --- ЛОГИКА ФИЛЬТРОВ ---
-
-        filterCategorySelect.addEventListener('change', (e) => {
-            currentFilters.category = e.target.value;
-            applyFiltersAndRenderTasks();
-        });
-
-        filterEpicSelect.addEventListener('change', (e) => {
-            currentFilters.epic = e.target.value;
-            applyFiltersAndRenderTasks();
-        });
-
-        filterStatusSelect.addEventListener('change', (e) => {
-            currentFilters.status = e.target.value;
-            applyFiltersAndRenderTasks();
-        });
-
-        filterMyTasksBtn.addEventListener('click', () => {
-            currentFilters.myTasks = !currentFilters.myTasks;
-            filterMyTasksBtn.classList.toggle('active', currentFilters.myTasks);
-            applyFiltersAndRenderTasks();
-        });
-
-        filterOverdueBtn.addEventListener('click', () => {
-            currentFilters.overdue = !currentFilters.overdue;
-            filterOverdueBtn.classList.toggle('active', currentFilters.overdue);
-            applyFiltersAndRenderTasks();
-        });
-
-        resetFiltersBtn.addEventListener('click', () => {
-            currentFilters = {
-                category: '',
-                epic: '',
-                status: '',
-                myTasks: false,
-                overdue: false
+            const id = taskIdInput.value ? parseInt(taskIdInput.value) : null;
+            const newTaskData = {
+                id: id,
+                title: taskTitleInput.value,
+                epic: taskEpicInput.value,
+                category: taskCategoryInput.value,
+                status: taskStatusInput.value,
+                owner: taskOwnerInput.value,
+                startDate: taskStartDateInput.value,
+                deadline: taskDeadlineInput.value,
+                complexity: "---" // Пока оставляем статичным
             };
-            filterCategorySelect.value = '';
-            filterEpicSelect.value = '';
-            filterStatusSelect.value = '';
-            filterMyTasksBtn.classList.remove('active');
-            filterOverdueBtn.classList.remove('active');
-            applyFiltersAndRenderTasks();
+
+            if (id) {
+                // Обновление существующей задачи
+                const taskIndex = mockTasks.findIndex(t => t.id === id);
+                if (taskIndex > -1) {
+                    mockTasks[taskIndex] = { ...mockTasks[taskIndex], ...newTaskData };
+                }
+            } else {
+                // Создание новой задачи
+                newTaskData.id = nextTaskId++;
+                mockTasks.push(newTaskData);
+            }
+            
+            closeTaskModal();
+            populateFilterDropdowns(); // Обновить фильтры, если появились новые категории/статусы/исполнители
+            applyFilters(); // Перерисовать задачи
+            alert('Задача сохранена/обновлена! (В данный момент данные не сохраняются между сессиями)');
         });
 
-        // --- ПЕРВЫЙ ЗАПУСК ---
-        fetchAppData();
-    </script>
+        // Удаление задачи (пока без реального удаления)
+        deleteTaskButton.addEventListener('click', () => {
+            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                const idToDelete = parseInt(taskIdInput.value);
+                mockTasks = mockTasks.filter(task => task.id !== idToDelete);
+                closeTaskModal();
+                populateFilterDropdowns();
+                applyFilters();
+                alert('Задача удалена! (В данный момент данные не сохраняются между сессиями)');
+            }
+        });
 
+
+        // *** Инициализация приложения ***
+        function initApp() {
+            populateFilterDropdowns();
+            applyFilters(); // Начальный рендеринг всех задач
+
+            // Обработчики событий для фильтров
+            filterCategory.addEventListener('change', applyFilters);
+            filterStatus.addEventListener('change', applyFilters);
+            filterOwner.addEventListener('change', applyFilters);
+            filterMyTasks.addEventListener('change', applyFilters);
+            
+            filterOverdue.addEventListener('click', () => {
+                filterOverdue.classList.toggle('active');
+                applyFilters();
+            });
+
+            filterReset.addEventListener('click', () => {
+                filterCategory.value = '';
+                filterStatus.value = '';
+                filterOwner.value = '';
+                filterMyTasks.checked = false;
+                filterOverdue.classList.remove('active');
+                applyFilters();
+            });
+
+            // Обработчик для БЛОК ПЛЮС
+            document.getElementById('block-plus').addEventListener('click', () => openTaskModal());
+
+            // Обработчик клика по карточкам задач (делегирование)
+            document.getElementById('main-board').addEventListener('click', (e) => {
+                const card = e.target.closest('.task-card');
+                if (card) {
+                    const taskId = parseInt(card.dataset.taskId);
+                    const task = mockTasks.find(t => t.id === taskId);
+                    if (task) {
+                        openTaskModal(task);
+                    }
+                }
+            });
+
+            // Закрытие модального окна по клику на крестик или вне окна
+            closeButton.addEventListener('click', closeTaskModal);
+            window.addEventListener('click', (e) => {
+                if (e.target === taskModal) {
+                    closeTaskModal();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
