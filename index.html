@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 9. Изменено название на "Свалка" -->
     <title>Свалка</title>
-    <!-- Иконка для вкладки в браузере. Вы никогда не сможете потерять меня! -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
     <style>
         /* Общие стили для всего, потому что я люблю порядок */
@@ -40,9 +38,10 @@
             flex-shrink: 0; /* Не сжимать название */
         }
 
-        /* Фильтры в БЛОК В */
+        /* Фильтры в БЛОК В (Временно скрыты для упрощения) */
         .filters {
-            display: flex;
+            display: none; /* Временно скрыто */
+            /* display: flex; */
             gap: 10px;
             flex-wrap: wrap;
             align-items: center;
@@ -110,7 +109,7 @@
             background-color: #2a2a2a;
             border-radius: 8px;
             padding: 10px;
-            /* 1. Ширина колонок одинаковая, чтобы помещалось 2 колонки */
+            /* Ширина колонок одинаковая, чтобы помещалось 2 колонки */
             width: 320px; /* Фиксированная ширина для колонок БЛОК О */
             flex-shrink: 0; /* Не сжимать колонки */
             max-height: calc(100vh - 120px); /* Ограничение по высоте, чтобы не выходило за экран */
@@ -135,7 +134,6 @@
         }
 
         .task-card {
-            /* 8. Изменен цвет самих тасков на белый */
             background-color: #f8f8f8; /* Почти белый */
             border-radius: 6px;
             padding: 12px;
@@ -143,7 +141,7 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             color: #333; /* Темный текст для светлого фона */
-            border-left: 5px solid transparent; /* 6. Для цвета категории */
+            border-left: 5px solid transparent; /* Для цвета категории */
         }
 
         .task-card:hover {
@@ -281,6 +279,7 @@
         #delete-task-button {
             background-color: #dc3545; /* Красный для удаления */
             color: white;
+            display: none; /* Удаление отключено, так что кнопка скрыта */
         }
         #delete-task-button:hover {
             background-color: #c82333;
@@ -402,7 +401,6 @@
 <body>
     <!-- Простая аутентификация -->
     <div id="auth-screen" class="auth-screen">
-        <!-- Удалено "4444" из placeholder -->
         <input type="password" id="password-input" placeholder="Введите пароль">
         <button id="login-button">Войти</button>
     </div>
@@ -411,28 +409,12 @@
         <!-- БЛОК В - Заголовок и фильтры -->
         <header id="block-v">
             <div class="filters">
-                <!-- Добавлены наименования фильтров -->
-                <div class="filter-group">
-                    <label for="filter-category">Категория:</label>
-                    <select id="filter-category" class="filter-dropdown"></select>
-                </div>
-                <div class="filter-group">
-                    <label for="filter-status">Статус:</label>
-                    <select id="filter-status" class="filter-dropdown"></select>
-                </div>
-                <div class="filter-group">
-                    <label for="filter-owner">Исполнитель:</label>
-                    <select id="filter-owner" class="filter-dropdown"></select>
-                </div>
-                <button id="filter-overdue" class="filter-button">Просроченные</button>
-                <button id="filter-my-tasks" class="filter-button">Мои</button>
-                <button id="filter-reset" class="filter-button">Сбросить</button>
+                <!-- Фильтры пока скрыты -->
             </div>
             <h1 class="title">СВАЛКА</h1>
         </header>
 
         <div id="main-board">
-            <!-- БЛОК Л - Изменен порядок: "Сегодня" сначала, потом "Без даты" -->
             <aside id="block-l" class="task-column">
                 <h2 class="column-title">Сегодня</h2>
                 <div class="task-list" id="tasks-today"></div>
@@ -458,7 +440,7 @@
                     <label for="task-title-input">Задача:</label>
                     <input type="text" id="task-title-input" required>
 
-                    <!-- 2. Эпик, Категория, Статус теперь выпадающие списки -->
+                    <!-- Выпадающие списки (Epic, Category, Status) -->
                     <label for="task-epic-input">Эпик:</label>
                     <select id="task-epic-input"></select>
 
@@ -477,11 +459,11 @@
                     <label for="task-deadline-input">Дедлайн:</label>
                     <input type="date" id="task-deadline-input">
 
-                    <!-- 5. Поле для Комментария -->
                     <label for="task-comment-input">Комментарий:</label>
                     <textarea id="task-comment-input" rows="4"></textarea>
                     
                     <button type="submit" id="save-task-button">Сохранить</button>
+                    <!-- Кнопка "Удалить" пока скрыта -->
                     <button type="button" id="delete-task-button" class="hidden">Удалить</button>
                 </form>
             </div>
@@ -519,11 +501,11 @@
             }
         }
 
-        // *** Данные задач (теперь они будут приходить из Google Sheets!) ***
-        let mockTasks = [];
-        let currentTasks = [];
-        let nextTaskId = 1;
-        let settingsData = { epics: [], categories: [], statuses: [] }; // 2. Для списков настроек
+        // *** Данные задач ***
+        let mockTasks = []; // Будет хранить все задачи, полученные из Sheets
+        // let currentTasks = []; // Временно не используется, так как фильтры отключены
+        let nextTaskId = 1; // Управляется бэкендом
+        let settingsData = { epics: [], categories: [], statuses: [] }; // Для выпадающих списков
 
         const TODAY = new Date();
         TODAY.setHours(0, 0, 0, 0);
@@ -558,6 +540,7 @@
         function getWeekRange(date) {
             if (!date) return null;
             const d = new Date(date);
+            if (isNaN(d.getTime())) return null; // Убедимся, что дата валидна
             const year = d.getFullYear();
             const weekNo = getWeekNumber(d);
             const weekStart = getWeekStartDate(year, weekNo);
@@ -581,11 +564,7 @@
                     throw new Error(data.error);
                 }
                 mockTasks = data;
-                if (mockTasks.length > 0) {
-                    nextTaskId = Math.max(...mockTasks.map(t => t.id).filter(id => typeof id === 'number' && !isNaN(id))) + 1;
-                } else {
-                    nextTaskId = 1;
-                }
+                // nextTaskId теперь генерируется на сервере, здесь не обновляем
                 return mockTasks;
             } catch (error) {
                 console.error("Ошибка при получении задач из Google Sheets:", error);
@@ -594,7 +573,7 @@
             }
         }
 
-        // 2. Функция для получения настроек (фильтров)
+        // Функция для получения настроек (для выпадающих списков)
         async function fetchSettings() {
             try {
                 const response = await fetch(`${APPS_SCRIPT_WEB_APP_URL}?action=getSettings`);
@@ -609,7 +588,7 @@
                 return settingsData;
             } catch (error) {
                 console.error("Ошибка при получении настроек из Google Sheets:", error);
-                return { epics: [], categories: [], statuses: [] };
+                return { epics: [], categories: [], statuses: [] }; // Возвращаем пустые массивы при ошибке
             }
         }
 
@@ -632,7 +611,7 @@
                 return data;
             } catch (error) {
                 console.error(`Ошибка при ${action} задачи в Google Sheets:`, error);
-                alert(`Не удалось ${action === 'create' ? 'создать' : action === 'update' ? 'обновить' : 'удалить'} задачу в таблице: ` + error.message + ". Проверьте консоль для деталей.");
+                alert(`Не удалось ${action === 'create' ? 'создать' : 'изменить'} задачу в таблице: ` + error.message + ". Проверьте консоль для деталей.");
                 return { success: false, error: error.message };
             }
         }
@@ -650,15 +629,22 @@
             const weeklyColumns = {};
 
             tasksToRender.forEach(task => {
-                const deadlineDate = task.deadline ? new Date(task.deadline) : null;
-                if (deadlineDate) deadlineDate.setHours(0, 0, 0, 0);
+                const deadline = task.deadline; // deadline теперь строка 'YYYY-MM-DD' или null
+                const startDate = task.startDate; // startDate строка 'YYYY-MM-DD' или null
 
-                if (deadlineDate && deadlineDate.getTime() === TODAY.getTime()) {
+                let isToday = false;
+                if (deadline) {
+                    const deadlineDate = new Date(deadline);
+                    deadlineDate.setHours(0, 0, 0, 0);
+                    isToday = deadlineDate.getTime() === TODAY.getTime();
+                }
+
+                if (isToday) {
                     tasksTodayContainer.appendChild(createTaskCard(task));
-                } else if (!task.startDate && !task.deadline) {
+                } else if (!startDate && !deadline) { // Если нет ни старта, ни дедлайна
                     tasksNoDateContainer.appendChild(createTaskCard(task));
-                } else if (task.deadline) {
-                    const weekInfo = getWeekRange(task.deadline);
+                } else if (deadline) {
+                    const weekInfo = getWeekRange(deadline);
                     if (weekInfo) {
                         if (!weeklyColumns[weekInfo.weekNo]) {
                             weeklyColumns[weekInfo.weekNo] = {
@@ -667,7 +653,14 @@
                             };
                         }
                         weeklyColumns[weekInfo.weekNo].tasks.push(task);
+                    } else {
+                        // Если дедлайн есть, но неделю определить не удалось, отправляем в "Без даты"
+                        // Это может произойти, если дата невалидна, но не null/""
+                        tasksNoDateContainer.appendChild(createTaskCard(task));
                     }
+                } else {
+                    // Задачи с startDate, но без deadline, также идут в "Без даты"
+                    tasksNoDateContainer.appendChild(createTaskCard(task));
                 }
             });
 
@@ -692,15 +685,20 @@
             card.classList.add('task-card');
             card.dataset.taskId = task.id;
 
-            const deadline = task.deadline ? new Date(task.deadline) : null;
-            const isOverdue = deadline && deadline < TODAY && task.status !== 'Выполнено';
+            const deadline = task.deadline;
+            let isOverdue = false;
+            if (deadline) {
+                const deadlineDate = new Date(deadline);
+                deadlineDate.setHours(0, 0, 0, 0);
+                isOverdue = deadlineDate < TODAY && task.status !== 'Выполнено';
+            }
 
             let statusClass = '';
             if (task.status === 'В работе') statusClass = 'status';
             else if (task.status === 'Запланировано') statusClass = 'status planned';
             else if (task.status === 'Ожидание') statusClass = 'status waiting';
 
-            // 6. Применяем цвет из колонки Color (если есть)
+            // Применяем цвет из колонки Color (если есть)
             if (task.color && task.color.trim() !== '') {
                 card.style.borderLeftColor = task.color;
             }
@@ -710,68 +708,23 @@
                 <p>Категория: ${task.category || '---'}</p>
                 <p>Статус: <span class="${statusClass}">${task.status || '---'}</span></p>
                 <p>Дедлайн: <span class="${isOverdue ? 'deadline overdue' : 'deadline'}">${formatDate(task.deadline)}</span></p>
-                ${task.owner && task.owner !== 'Я' ? `<p>Исполнитель: ${task.owner}</p>` : ''} <!-- 4. Скрываем исполнителя, если "Я" -->
+                ${task.owner && task.owner !== 'Я' ? `<p>Исполнитель: ${task.owner}</p>` : ''}
             `;
+            // Редактирование пока отключено
+            // card.addEventListener('click', () => openTaskModal(task)); 
             return card;
         }
 
-        // *** Логика фильтров ***
-        const filterCategory = document.getElementById('filter-category');
-        const filterStatus = document.getElementById('filter-status');
-        const filterOwner = document.getElementById('filter-owner');
-        const filterOverdue = document.getElementById('filter-overdue');
-        const filterMyTasksButton = document.getElementById('filter-my-tasks');
-        const filterReset = document.getElementById('filter-reset');
+        // *** Логика фильтров (временно отключена) ***
+        // const filterCategory = document.getElementById('filter-category');
+        // const filterStatus = document.getElementById('filter-status');
+        // const filterOwner = document.getElementById('filter-owner');
+        // const filterOverdue = document.getElementById('filter-overdue');
+        // const filterMyTasksButton = document.getElementById('filter-my-tasks');
+        // const filterReset = document.getElementById('filter-reset');
 
-        function populateFilterDropdowns() {
-            const categories = new Set(mockTasks.map(t => t.category).filter(Boolean));
-            const statuses = new Set(mockTasks.map(t => t.status).filter(Boolean));
-            const owners = new Set(mockTasks.map(t => t.owner).filter(Boolean));
-
-            addOptionsToDropdown(filterCategory, [...categories]);
-            addOptionsToDropdown(filterStatus, [...statuses]);
-            addOptionsToDropdown(filterOwner, [...owners]);
-        }
-
-        function addOptionsToDropdown(dropdownElement, options) {
-            dropdownElement.innerHTML = '<option value="">Все</option>';
-            options.forEach(option => {
-                const optElement = document.createElement('option');
-                optElement.value = option;
-                optElement.textContent = option;
-                dropdownElement.appendChild(optElement);
-            });
-        }
-
-        function applyFilters() {
-            let filtered = [...mockTasks];
-
-            const categoryVal = filterCategory.value;
-            const statusVal = filterStatus.value;
-            const ownerVal = filterOwner.value;
-            const onlyMyTasksActive = filterMyTasksButton.classList.contains('active');
-            let showOverdueOnly = filterOverdue.classList.contains('active');
-
-            if (categoryVal) filtered = filtered.filter(task => task.category === categoryVal);
-            if (statusVal) filtered = filtered.filter(task => task.status === statusVal);
-            if (ownerVal) filtered = filtered.filter(task => task.owner === ownerVal);
-
-            if (onlyMyTasksActive) {
-                filtered = filtered.filter(task => 
-                    task.owner === "Я" && (task.status === "Запланировано" || task.status === "В работе")
-                );
-            }
-
-            if (showOverdueOnly) {
-                filtered = filtered.filter(task => {
-                    const deadline = task.deadline ? new Date(task.deadline) : null;
-                    return deadline && deadline < TODAY && task.status !== 'Выполнено';
-                });
-            }
-
-            currentTasks = filtered;
-            renderTasks(currentTasks);
-        }
+        // function populateFilterDropdowns() { /* ... */ }
+        // function applyFilters() { /* ... */ }
 
         // *** Модальное окно для задач ***
         const taskModal = document.getElementById('task-modal');
@@ -781,7 +734,6 @@
         const taskIdInput = document.getElementById('task-id');
         const taskTitleInput = document.getElementById('task-title-input');
 
-        // 2. Эпик, Категория, Статус теперь выпадающие списки в модалке
         const taskEpicInput = document.getElementById('task-epic-input');
         const taskCategoryInput = document.getElementById('task-category-input');
         const taskStatusInput = document.getElementById('task-status-input');
@@ -789,35 +741,36 @@
         const taskOwnerInput = document.getElementById('task-owner-input');
         const taskStartDateInput = document.getElementById('task-start-date-input');
         const taskDeadlineInput = document.getElementById('task-deadline-input');
-        const taskCommentInput = document.getElementById('task-comment-input'); // 5. Поле для комментария
+        const taskCommentInput = document.getElementById('task-comment-input'); 
 
-        const saveTaskButton = document.getElementById('save-task-button');
-        const deleteTaskButton = document.getElementById('delete-task-button');
-
-        // 2. Заполнение выпадающих списков в модальном окне
+        // Заполнение выпадающих списков в модальном окне
         function populateModalDropdowns() {
-            addOptionsToDropdown(taskEpicInput, settingsData.epics, false); // false - не добавлять "Все"
-            addOptionsToDropdown(taskCategoryInput, settingsData.categories, false);
-            addOptionsToDropdown(taskStatusInput, settingsData.statuses, false);
+            addOptionsToDropdown(taskEpicInput, settingsData.epics);
+            addOptionsToDropdown(taskCategoryInput, settingsData.categories);
+            addOptionsToDropdown(taskStatusInput, settingsData.statuses);
         }
 
-        function addOptionsToDropdown(dropdownElement, options, addAllOption = true) {
-            dropdownElement.innerHTML = addAllOption ? '<option value="">Все</option>' : '';
-            options.forEach(option => {
-                const optElement = document.createElement('option');
-                optElement.value = option;
-                optElement.textContent = option;
-                dropdownElement.appendChild(optElement);
-            });
+        function addOptionsToDropdown(dropdownElement, options) {
+            dropdownElement.innerHTML = '<option value="">Выбрать</option>'; // Пустое значение по умолчанию
+            if (options && Array.isArray(options)) { // Проверяем, что options - это массив
+                options.forEach(option => {
+                    const optElement = document.createElement('option');
+                    optElement.value = option;
+                    optElement.textContent = option;
+                    dropdownElement.appendChild(optElement);
+                });
+            } else {
+                console.warn("addOptionsToDropdown: Ожидался массив, получено:", options);
+            }
         }
 
         function openTaskModal(task = null) {
             taskForm.reset();
-            deleteTaskButton.classList.add('hidden');
+            // deleteTaskButton.classList.add('hidden'); // Кнопка удаления пока отключена
             
             populateModalDropdowns(); // Заполняем выпадающие списки модального окна
 
-            if (task) {
+            if (task) { // Режим редактирования пока отключен
                 modalTitle.textContent = "Редактировать задачу";
                 taskIdInput.value = task.id;
                 taskTitleInput.value = task.title;
@@ -827,27 +780,26 @@
                 taskOwnerInput.value = task.owner;
                 taskStartDateInput.value = task.startDate;
                 taskDeadlineInput.value = task.deadline;
-                taskCommentInput.value = task.comment; // 5. Устанавливаем комментарий
-                deleteTaskButton.classList.remove('hidden');
+                taskCommentInput.value = task.comment;
+                // deleteTaskButton.classList.remove('hidden'); 
             } else {
                 modalTitle.textContent = "Создать новую задачу";
                 taskIdInput.value = '';
 
-                // 3. Заполнение значений по умолчанию для новой задачи (Дата начала и Дедлайн)
-                const todayFormatted = TODAY.toISOString().split('T')[0];
-                const sevenDaysLater = new Date(TODAY);
-                sevenDaysLater.setDate(TODAY.getDate() + 7);
-                const sevenDaysLaterFormatted = sevenDaysLater.toISOString().split('T')[0];
+                // Заполнение значений по умолчанию для новой задачи (Дата начала и Дедлайн)
+                const todayLocal = new Date();
+                const todayFormattedLocal = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
 
                 taskOwnerInput.value = "Я";
-                taskStartDateInput.value = todayFormatted;
-                taskDeadlineInput.value = sevenDaysLaterFormatted;
+                taskStartDateInput.value = todayFormattedLocal;
+                taskDeadlineInput.value = todayFormattedLocal;
                 
                 // Устанавливаем значения по умолчанию для выпадающих списков из настроек
-                taskEpicInput.value = settingsData.epics.length > 0 ? settingsData.epics[0] : "Работа";
-                taskCategoryInput.value = settingsData.categories.length > 0 ? settingsData.categories[0] : "Голосовые тренажеры";
-                taskStatusInput.value = settingsData.statuses.length > 0 ? settingsData.statuses[0] : "Запланировано";
-                taskCommentInput.value = ''; // 5. Комментарий по умолчанию пуст
+                // Если настроек нет, будет пустое значение 'Выбрать'
+                taskEpicInput.value = settingsData.epics.length > 0 ? settingsData.epics[0] : '';
+                taskCategoryInput.value = settingsData.categories.length > 0 ? settingsData.categories[0] : '';
+                taskStatusInput.value = settingsData.statuses.length > 0 ? settingsData.statuses[0] : '';
+                taskCommentInput.value = '';
             }
             taskModal.style.display = 'flex';
         }
@@ -863,7 +815,7 @@
 
             const id = taskIdInput.value ? parseInt(taskIdInput.value) : null;
             const taskData = {
-                id: id,
+                id: id, // ID будет переопределен на сервере при создании
                 title: taskTitleInput.value,
                 epic: taskEpicInput.value,
                 category: taskCategoryInput.value,
@@ -871,83 +823,63 @@
                 owner: taskOwnerInput.value,
                 startDate: taskStartDateInput.value,
                 deadline: taskDeadlineInput.value,
-                comment: taskCommentInput.value, // 5. Отправляем комментарий
-                complexity: "---" 
+                comment: taskCommentInput.value,
+                // complexity: "---" // complexity пока не передаем из клиента
             };
 
             let result;
-            if (id) {
-                result = await sendTaskToSheet(taskData, 'update');
+            if (id) { // Режим редактирования пока отключен
+                // result = await sendTaskToSheet(taskData, 'update');
+                alert('Редактирование задач пока отключено.');
+                return;
             } else {
                 result = await sendTaskToSheet(taskData, 'create');
             }
             
             if (result.success) {
                 closeTaskModal();
-                await initDataAndRender();
-                alert('Задача сохранена/обновлена в Google Таблице!');
+                await initDataAndRender(); // Перезагружаем все задачи
+                alert('Задача успешно создана в Google Таблице!');
+            } else {
+                alert('Ошибка при создании задачи: ' + (result.error || 'Неизвестная ошибка.'));
             }
         });
 
-        deleteTaskButton.addEventListener('click', async () => {
-            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
-                const idToDelete = parseInt(taskIdInput.value);
-                const result = await sendTaskToSheet({ id: idToDelete }, 'delete');
-
-                if (result.success) {
-                    closeTaskModal();
-                    await initDataAndRender();
-                    alert('Задача удалена из Google Таблицы!');
-                }
-            }
-        });
+        // Кнопка удаления пока отключена
+        // deleteTaskButton.addEventListener('click', async () => { /* ... */ });
 
         async function initDataAndRender() {
-            await fetchSettings(); // 2. Сначала получаем настройки
+            await fetchSettings(); // Сначала получаем настройки
             await fetchTasks();    // Затем задачи
-            populateFilterDropdowns();
-            applyFilters();
+            // populateFilterDropdowns(); // Фильтры пока отключены
+            renderTasks(mockTasks); // Рендерим все полученные задачи
         }
 
         // *** Инициализация приложения ***
         function initApp() {
             initDataAndRender(); 
 
-            filterCategory.addEventListener('change', applyFilters);
-            filterStatus.addEventListener('change', applyFilters);
-            filterOwner.addEventListener('change', applyFilters);
-            
-            filterOverdue.addEventListener('click', () => {
-                filterOverdue.classList.toggle('active');
-                applyFilters();
-            });
-
-            filterMyTasksButton.addEventListener('click', () => {
-                filterMyTasksButton.classList.toggle('active');
-                applyFilters();
-            });
-
-            filterReset.addEventListener('click', () => {
-                filterCategory.value = '';
-                filterStatus.value = '';
-                filterOwner.value = '';
-                filterMyTasksButton.classList.remove('active');
-                filterOverdue.classList.remove('active');
-                applyFilters();
-            });
+            // Фильтры пока отключены
+            // filterCategory.addEventListener('change', applyFilters);
+            // filterStatus.addEventListener('change', applyFilters);
+            // filterOwner.addEventListener('change', applyFilters);
+            // filterOverdue.addEventListener('click', () => { /* ... */ });
+            // filterMyTasksButton.addEventListener('click', () => { /* ... */ });
+            // filterReset.addEventListener('click', () => { /* ... */ });
 
             document.getElementById('block-plus').addEventListener('click', () => openTaskModal());
 
-            document.getElementById('main-board').addEventListener('click', (e) => {
-                const card = e.target.closest('.task-card');
-                if (card) {
-                    const taskId = parseInt(card.dataset.taskId);
-                    const task = mockTasks.find(t => t.id === taskId);
-                    if (task) {
-                        openTaskModal(task);
-                    }
-                }
-            });
+            // Редактирование задач по клику пока отключено
+            // document.getElementById('main-board').addEventListener('click', (e) => {
+            //     const card = e.target.closest('.task-card');
+            //     if (card) {
+            //         const taskId = parseInt(card.dataset.taskId);
+            //         const task = mockTasks.find(t => t.id === taskId);
+            //         if (task) {
+            //             openTaskModal(task);
+            //         }
+            //     }
+            // });
 
             closeButton.addEventListener('click', closeTaskModal);
             window.addEventListener('click', (e) => {
