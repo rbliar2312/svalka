@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Свалка</title>
+    <!-- Иконка восстановлена -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #1a1a1a; color: #e0e0e0; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
         #block-v { padding: 15px 25px; background-color: #2a2a2a; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
@@ -13,6 +15,10 @@
         .filter-dropdown, .filter-button { padding: 8px 12px; border: 1px solid #444; border-radius: 5px; background-color: #333; color: #e0e0e0; cursor: pointer; }
         .filter-button:hover, .filter-dropdown:hover { background-color: #444; }
         
+        /* Стили для чекбокса "Мои" */
+        .filter-checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em; color: #e0e0e0; }
+        .filter-checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
+
         #main-board { display: flex; flex-grow: 1; padding: 0 15px 15px; gap: 25px; overflow-x: auto; }
         #block-l { flex-shrink: 0; width: 280px; padding-right: 25px; border-right: 1px solid rgba(255,255,255,0.1); }
         #block-o-container { display: flex; gap: 15px; }
@@ -20,12 +26,18 @@
         .column-title { color: #ffa500; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; }
         .task-list { display: flex; flex-direction: column; gap: 10px; }
         
-        /* Карточка задачи */
-        .task-card { background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border-left: 5px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
+        /* Карточка задачи - теперь толстая полная обводка */
+        .task-card { background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border: 3px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
         .task-card:hover { transform: translateY(-2px); }
         .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; padding-right: 20px;}
         .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
         
+        /* Цвет для просроченных задач */
+        .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; }
+        .overdue-card h3 { color: #ffcccc !important; }
+        .overdue-card p { color: #e0e0e0 !important; }
+        .overdue-card .owner-tag { background: #555 !important; color: #fff !important; }
+
         /* Бледные статусы */
         .status-planned { color: #8ab4f8; font-weight: bold; } /* Бледно-синий */
         .status-progress { color: #81c995; font-weight: bold; } /* Бледно-зеленый */
@@ -60,20 +72,19 @@
     <div id="main-content" class="hidden">
         <header id="block-v">
             <div class="filters">
-                <select id="filter-category" class="filter-dropdown"><option value="">Все категории</option></select>
-                <select id="filter-status" class="filter-dropdown"><option value="">Все статусы</option></select>
-                <select id="filter-owner" class="filter-dropdown"><option value="">Все исполнители</option></select>
+                <select id="filter-category" class="filter-dropdown"></select>
+                <select id="filter-status" class="filter-dropdown"></select>
+                <select id="filter-owner" class="filter-dropdown"></select>
+                <label class="filter-checkbox-label">
+                    <input type="checkbox" id="filter-my"> Мои
+                </label>
                 <button id="filter-reset" class="filter-button">Сбросить</button>
             </div>
             <h1 class="title">СВАЛКА</h1>
         </header>
         <div id="main-board">
-            <aside id="block-l" class="task-column">
-                <h2 class="column-title">Сегодня</h2>
-                <div class="task-list" id="tasks-today"></div>
-                <h2 class="column-title" style="margin-top: 25px;">Без даты</h2>
-                <div class="task-list" id="tasks-no-date"></div>
-            </aside>
+            <!-- Блок L теперь будет заполняться динамически -->
+            <aside id="block-l"></aside>
             <div id="block-o-container"></div>
         </div>
         <button id="block-plus" class="fab">+</button>
@@ -138,31 +149,28 @@
         const fCat = document.getElementById('filter-category');
         const fStat = document.getElementById('filter-status');
         const fOwn = document.getElementById('filter-owner');
+        const fMy = document.getElementById('filter-my');
 
         function populateFilters() {
-            const addOpts = (el, arr) => {
-                el.innerHTML = '<option value="">Все</option>';
+            const addOpts = (el, arr, label) => {
+                el.innerHTML = `<option value="">${label}</option>`;
                 arr.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
             };
             const cats = [...new Set(mockTasks.map(t => t.category).filter(Boolean))];
             const owns = [...new Set(mockTasks.map(t => t.owner).filter(Boolean))];
-            addOpts(fCat, cats);
-            addOpts(fOwn, owns);
-            addOpts(fStat, HARDCODED_STATUSES);
+            addOpts(fCat, cats, 'Категория');
+            addOpts(fOwn, owns, 'Исполнитель');
+            addOpts(fStat, HARDCODED_STATUSES, 'Статус');
         }
 
         function applyFilters() {
             let filtered = mockTasks.filter(t => {
-                // Исключаем Завершено и Неактуально по умолчанию
                 const isHiddenStatus = t.status === 'Завершено' || t.status === 'Неактуально' || t.status === 'Не актуально';
-                // Если статус выбран в фильтре жестко - показываем, иначе скрываем закрытые
-                if (fStat.value === '') {
-                    if (isHiddenStatus) return false;
-                }
-                
+                if (fStat.value === '') { if (isHiddenStatus) return false; }
                 if (fCat.value && t.category !== fCat.value) return false;
                 if (fStat.value && t.status !== fStat.value) return false;
                 if (fOwn.value && t.owner !== fOwn.value) return false;
+                if (fMy.checked && t.owner !== 'Я') return false; // Логика "Мои"
                 return true;
             });
             render(filtered);
@@ -171,8 +179,9 @@
         fCat.onchange = applyFilters;
         fStat.onchange = applyFilters;
         fOwn.onchange = applyFilters;
+        fMy.onchange = applyFilters;
         document.getElementById('filter-reset').onclick = () => {
-            fCat.value = ''; fStat.value = ''; fOwn.value = '';
+            fCat.value = ''; fStat.value = ''; fOwn.value = ''; fMy.checked = false;
             applyFilters();
         };
 
@@ -190,21 +199,43 @@
         }
 
         function render(tasks) {
-            document.getElementById('tasks-today').innerHTML = '';
-            document.getElementById('tasks-no-date').innerHTML = '';
-            document.getElementById('block-o-container').innerHTML = '';
+            const blockL = document.getElementById('block-l');
+            const blockO = document.getElementById('block-o-container');
+            blockL.innerHTML = '';
+            blockO.innerHTML = '';
             
-            const todayStr = new Date().toISOString().slice(0, 10);
+            // СОРТИРОВКА: Сначала Ожидание вниз, затем по дате
+            tasks.sort((a, b) => {
+                if (a.status === 'Ожидание' && b.status !== 'Ожидание') return 1;
+                if (a.status !== 'Ожидание' && b.status === 'Ожидание') return -1;
+                const dA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+                const dB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+                return dA - dB;
+            });
+
+            const todayTasks = [];
+            const overdueTasks = [];
+            const noDateTasks = [];
             const weeks = {};
+
+            const todayDate = new Date();
+            todayDate.setHours(0,0,0,0);
+            const todayStr = todayDate.toISOString().slice(0, 10);
 
             tasks.forEach(t => {
                 const card = document.createElement('div');
                 card.className = 'task-card';
-                // Клик по карточке открывает редактирование
-                card.onclick = () => openModal(t);
+                card.onclick = () => openModal(t); // Кликабельность восстановлена
 
-                if(t.color) card.style.borderLeftColor = t.color;
+                // Толстая обводка по цвету из таблицы
+                if(t.color) card.style.border = `3px solid ${t.color}`;
                 
+                const deadlineDate = t.deadline ? new Date(t.deadline) : null;
+                if(deadlineDate) deadlineDate.setHours(0,0,0,0);
+
+                const isOverdue = deadlineDate && deadlineDate < todayDate && t.status !== 'Выполнено' && t.status !== 'Завершено';
+                if(isOverdue) card.classList.add('overdue-card');
+
                 let sClass = '';
                 if(t.status === 'Запланировано') sClass = 'status-planned';
                 if(t.status === 'В работе') sClass = 'status-progress';
@@ -222,32 +253,51 @@
                     <div class="quick-complete" title="Завершить" onclick="fastComplete(event, ${t.id})">✔</div>
                 `;
 
-                if (!t.deadline) {
-                    document.getElementById('tasks-no-date').appendChild(card);
-                } else if (t.deadline === todayStr) {
-                    document.getElementById('tasks-today').appendChild(card);
-                } else {
+                if (!t.deadline) noDateTasks.push(card);
+                else if (isOverdue) overdueTasks.push(card);
+                else if (t.deadline === todayStr) todayTasks.push(card);
+                else {
                     const w = getWeekInfo(t.deadline);
                     if(!weeks[w.week]) weeks[w.week] = { title: w.text, cards: [] };
                     weeks[w.week].cards.push(card);
                 }
             });
 
+            // Функция отрисовки динамических блоков слева
+            const appendSection = (title, cardsArr) => {
+                if (cardsArr.length === 0) return;
+                const sec = document.createElement('div');
+                sec.className = 'task-column';
+                sec.style.marginBottom = '25px';
+                sec.innerHTML = `<h2 class="column-title">${title}</h2><div class="task-list"></div>`;
+                const list = sec.querySelector('.task-list');
+                cardsArr.forEach(c => list.appendChild(c));
+                blockL.appendChild(sec);
+            };
+
+            // Порядок рендера: Сегодня -> Просрочено -> Без даты
+            appendSection('Сегодня', todayTasks);
+            appendSection('Просрочено', overdueTasks);
+            appendSection('Без даты', noDateTasks);
+
+            if(blockL.innerHTML === '') blockL.style.display = 'none';
+            else blockL.style.display = 'block';
+
             Object.keys(weeks).sort((a,b)=>a-b).forEach(wk => {
                 const col = document.createElement('div'); col.className = 'task-column';
                 col.innerHTML = `<h2 class="column-title">${weeks[wk].title}</h2><div class="task-list"></div>`;
                 weeks[wk].cards.forEach(c => col.querySelector('.task-list').appendChild(c));
-                document.getElementById('block-o-container').appendChild(col);
+                blockO.appendChild(col);
             });
         }
 
         // --- БЫСТРОЕ ЗАВЕРШЕНИЕ ---
         window.fastComplete = async function(event, id) {
-            event.stopPropagation(); // Чтобы не открылась модалка
+            event.stopPropagation(); // Не открывать модалку
             const task = mockTasks.find(t => t.id === id);
             if (!task) return;
             task.status = 'Завершено';
-            applyFilters(); // Сразу скрываем из интерфейса (UX)
+            applyFilters(); // Скрыть визуально сразу
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'update', task: task}) });
             } catch(e) { alert('Ошибка сети'); }
@@ -288,7 +338,7 @@
                 
                 const todayLocal = new Date();
                 const tmrLocal = new Date();
-                tmrLocal.setDate(tmrLocal.getDate() + 1); // Дедлайн + 1 день
+                tmrLocal.setDate(tmrLocal.getDate() + 1); // ДЕДЛАЙН ПО УМОЛЧАНИЮ + 1 ДЕНЬ
                 
                 const fDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
                 
@@ -329,7 +379,7 @@
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: actionType, task: taskData}) });
                 modal.style.display = 'none';
-                loadData(); // Перезагружаем данные с сервера
+                loadData(); // Перезагружаем с сервера
             } catch(err) { alert('Ошибка сохранения'); }
             
             btn.disabled = false; btn.textContent = 'Сохранить';
