@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Свалка</title>
+    <!-- ИКОНКА ВОССТАНОВЛЕНА -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #1a1a1a; color: #e0e0e0; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
@@ -24,14 +25,17 @@
         .column-title { color: #ffa500; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; }
         .task-list { display: flex; flex-direction: column; gap: 10px; }
         
-        /* ИСПРАВЛЕНИЕ РАЗМЕРА КАРТОЧКИ: box-sizing */
-        .task-card { box-sizing: border-box; background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border: 3px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
+        /* КАРТОЧКА: box-sizing исправляет вылезание за края */
+        .task-card { box-sizing: border-box; background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border: 4px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
         .task-card:hover { transform: translateY(-2px); }
         .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; padding-right: 20px;}
         .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
         
-        /* Просроченная карточка */
-        .overdue-card { border-color: #ff6b6b !important; }
+        /* Просроченная карточка: бледно-красный фон */
+        .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; }
+        .overdue-card h3 { color: #ffcccc !important; }
+        .overdue-card p { color: #e0e0e0 !important; }
+        .overdue-card .owner-tag { background: #555 !important; color: #fff !important; }
 
         .status-planned { color: #8ab4f8; font-weight: bold; } 
         .status-progress { color: #81c995; font-weight: bold; } 
@@ -101,7 +105,7 @@
     </div>
 
     <script>
-        // ТВОЙ URL ВШИТ
+        // ТВОЙ URL РАЗВЕРТЫВАНИЯ
         const API_URL = 'https://script.google.com/macros/s/AKfycbwmwzgjyy6jh0r679XUo86Kj1Bc_Ijta_74mDuvTETeE0SYi003_pTinujYuimvt2z64A/exec'; 
 
         const HARDCODED_STATUSES = ['Запланировано', 'В работе', 'Ожидание', 'Завершено', 'Неактуально'];
@@ -147,9 +151,9 @@
             };
             const cats = [...new Set(mockTasks.map(t => t.category).filter(Boolean))];
             const owns = [...new Set(mockTasks.map(t => t.owner).filter(Boolean))];
-            addOpts(fCat, cats, 'Все категории');
-            addOpts(fOwn, owns, 'Все исполнители');
-            addOpts(fStat, HARDCODED_STATUSES, 'Все статусы');
+            addOpts(fCat, cats, 'Категория');
+            addOpts(fOwn, owns, 'Исполнитель');
+            addOpts(fStat, HARDCODED_STATUSES, 'Статус');
         }
 
         function applyFilters() {
@@ -174,8 +178,15 @@
             applyFilters();
         };
 
+        // Жесткий и надежный парсер дат, чтобы избежать багов часовых поясов
+        function parseDateString(dateStr) {
+            if (!dateStr) return null;
+            const p = dateStr.split('-');
+            return new Date(p[0], p[1]-1, p[2]); 
+        }
+
         function getWeekInfo(dateStr) {
-            const d = new Date(dateStr);
+            const d = parseDateString(dateStr);
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
             const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
             const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
@@ -192,36 +203,31 @@
             blockL.innerHTML = '';
             blockO.innerHTML = '';
             
-            // ИСПРАВЛЕНИЕ: Локальная дата для сравнения
             const todayDate = new Date();
             todayDate.setHours(0,0,0,0);
-            const localTodayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth()+1).padStart(2,'0')}-${String(todayDate.getDate()).padStart(2,'0')}`;
+            const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth()+1).padStart(2,'0')}-${String(todayDate.getDate()).padStart(2,'0')}`;
 
-            // СОРТИРОВКА: 1. Просроченные вверх 2. Ожидание вниз 3. Чем раньше дата, тем выше
+            // УМНАЯ СОРТИРОВКА (Тир 1 - Просрочено, Тир 2 - Норма, Тир 3 - Ожидание)
+            function getTaskTier(t) {
+                if (t.status === 'Ожидание') return 3; 
+                const d = parseDateString(t.deadline);
+                if (d && d < todayDate && t.status !== 'Завершено' && t.status !== 'Неактуально') return 1;
+                return 2; 
+            }
+
             tasks.sort((a, b) => {
-                const dA = a.deadline ? new Date(a.deadline) : new Date(8640000000000000); 
-                const dB = b.deadline ? new Date(b.deadline) : new Date(8640000000000000);
-                dA.setHours(0,0,0,0); dB.setHours(0,0,0,0);
-
-                const aOverdue = dA < todayDate && a.status !== 'Завершено';
-                const bOverdue = dB < todayDate && b.status !== 'Завершено';
-
-                // Сначала просроченные
-                if (aOverdue && !bOverdue) return -1;
-                if (!aOverdue && bOverdue) return 1;
-
-                // Затем Ожидание в самый низ
-                const aWait = a.status === 'Ожидание';
-                const bWait = b.status === 'Ожидание';
-                if (aWait && !bWait) return 1;
-                if (!aWait && bWait) return -1;
-
-                // Внутри групп - сортировка по дате (чем раньше, тем выше)
-                return dA.getTime() - dB.getTime();
+                const tierA = getTaskTier(a);
+                const tierB = getTaskTier(b);
+                if (tierA !== tierB) return tierA - tierB; 
+                
+                const dA = parseDateString(a.deadline) ? parseDateString(a.deadline).getTime() : Infinity;
+                const dB = parseDateString(b.deadline) ? parseDateString(b.deadline).getTime() : Infinity;
+                return dA - dB;
             });
 
             const todayTasks = [];
             const noDateTasks = [];
+            const overdueTasks = [];
             const weeks = {};
 
             tasks.forEach(t => {
@@ -229,15 +235,12 @@
                 card.className = 'task-card';
                 card.onclick = () => openModal(t); 
 
-                // Обводка из гугл таблицы
-                if(t.color) card.style.border = `3px solid ${t.color}`;
+                // Толстая полная обводка
+                if(t.color) card.style.borderColor = t.color;
                 
-                const deadlineDate = t.deadline ? new Date(t.deadline) : null;
-                if(deadlineDate) deadlineDate.setHours(0,0,0,0);
-
-                // Просрочка
+                const deadlineDate = parseDateString(t.deadline);
                 const isOverdue = deadlineDate && deadlineDate < todayDate && t.status !== 'Завершено' && t.status !== 'Неактуально';
-                if(isOverdue) card.classList.add('overdue-card'); // Красная обводка перебьет гугловскую из-за !important
+                if(isOverdue) card.classList.add('overdue-card');
 
                 let sClass = '';
                 if(t.status === 'Запланировано') sClass = 'status-planned';
@@ -256,38 +259,38 @@
                     <div class="quick-complete" title="Завершить" onclick="fastComplete(event, ${t.id})">✔</div>
                 `;
 
-                // ЛОГИКА РАСПРЕДЕЛЕНИЯ (Исправлено)
+                // ЛОГИКА РАСПРЕДЕЛЕНИЯ (Блок Л: Сегодня -> Просрочено -> Без даты)
                 if (!t.deadline) {
-                    noDateTasks.push(card); // Без даты -> Блок Л
-                } else if (t.deadline === localTodayStr) {
-                    todayTasks.push(card); // Сегодня -> Блок Л
+                    noDateTasks.push(card);
+                } else if (isOverdue) {
+                    overdueTasks.push(card);
+                } else if (t.deadline === todayStr) {
+                    todayTasks.push(card);
                 } else {
-                    // ВСЕ ОСТАЛЬНЫЕ (Просроченные и Будущие) -> Недели (Блок О)
                     const w = getWeekInfo(t.deadline);
                     if(!weeks[w.week]) weeks[w.week] = { title: w.text, cards: [] };
                     weeks[w.week].cards.push(card);
                 }
             });
 
+            // Рендер Блока L без ограничивающих классов
             const appendSection = (title, cardsArr) => {
                 if (cardsArr.length === 0) return;
                 const sec = document.createElement('div');
-                sec.className = 'task-column';
-                sec.style.marginBottom = '25px';
+                sec.style.marginBottom = '25px'; // Просто отступ, без жесткой ширины
                 sec.innerHTML = `<h2 class="column-title">${title}</h2><div class="task-list"></div>`;
                 const list = sec.querySelector('.task-list');
                 cardsArr.forEach(c => list.appendChild(c));
                 blockL.appendChild(sec);
             };
 
-            // В Блок Л рисуем ТОЛЬКО Сегодня и Без даты
             appendSection('Сегодня', todayTasks);
+            appendSection('Просрочено', overdueTasks);
             appendSection('Без даты', noDateTasks);
 
             if(blockL.innerHTML === '') blockL.style.display = 'none';
             else blockL.style.display = 'block';
 
-            // Недели
             Object.keys(weeks).sort((a,b)=>a-b).forEach(wk => {
                 const col = document.createElement('div'); col.className = 'task-column';
                 col.innerHTML = `<h2 class="column-title">${weeks[wk].title}</h2><div class="task-list"></div>`;
