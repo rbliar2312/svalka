@@ -24,15 +24,14 @@
         .column-title { color: #ffa500; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; }
         .task-list { display: flex; flex-direction: column; gap: 10px; }
         
-        .task-card { background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border: 3px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
+        /* ИСПРАВЛЕНИЕ РАЗМЕРА КАРТОЧКИ: box-sizing */
+        .task-card { box-sizing: border-box; background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border: 3px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
         .task-card:hover { transform: translateY(-2px); }
         .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; padding-right: 20px;}
         .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
         
-        .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; }
-        .overdue-card h3 { color: #ffcccc !important; }
-        .overdue-card p { color: #e0e0e0 !important; }
-        .overdue-card .owner-tag { background: #555 !important; color: #fff !important; }
+        /* Просроченная карточка */
+        .overdue-card { border-color: #ff6b6b !important; }
 
         .status-planned { color: #8ab4f8; font-weight: bold; } 
         .status-progress { color: #81c995; font-weight: bold; } 
@@ -47,7 +46,7 @@
         .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-content { background-color: #2a2a2a; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; position: relative; }
         .modal-content label { display: block; margin-bottom: 5px; color: #e0e0e0; }
-        .modal-content input, .modal-content select, .modal-content textarea { width: calc(100% - 20px); padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background-color: #333; color: #fff; }
+        .modal-content input, .modal-content select, .modal-content textarea { width: calc(100% - 20px); padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background-color: #333; color: #fff; box-sizing: border-box; }
         .modal-content button { padding: 10px 20px; background-color: #ffa500; border: none; border-radius: 5px; cursor: pointer; color: #1a1a1a; }
         .close-button { position: absolute; top: 10px; right: 15px; color: #aaa; font-size: 28px; cursor: pointer; }
         .auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 300; }
@@ -76,9 +75,7 @@
             <h1 class="title">СВАЛКА</h1>
         </header>
         <div id="main-board">
-            <!-- Блок L: Только Сегодня и Без даты -->
             <aside id="block-l"></aside>
-            <!-- Блок О: Колонки недель с просроченными внутри -->
             <div id="block-o-container"></div>
         </div>
         <button id="block-plus" class="fab">+</button>
@@ -104,7 +101,7 @@
     </div>
 
     <script>
-        // ТВОЙ URL ВШИТ!
+        // ТВОЙ URL ВШИТ
         const API_URL = 'https://script.google.com/macros/s/AKfycbwmwzgjyy6jh0r679XUo86Kj1Bc_Ijta_74mDuvTETeE0SYi003_pTinujYuimvt2z64A/exec'; 
 
         const HARDCODED_STATUSES = ['Запланировано', 'В работе', 'Ожидание', 'Завершено', 'Неактуально'];
@@ -138,7 +135,6 @@
             } catch(e) { console.error(e); }
         }
 
-        // --- ФИЛЬТРЫ ---
         const fCat = document.getElementById('filter-category');
         const fStat = document.getElementById('filter-status');
         const fOwn = document.getElementById('filter-owner');
@@ -151,9 +147,9 @@
             };
             const cats = [...new Set(mockTasks.map(t => t.category).filter(Boolean))];
             const owns = [...new Set(mockTasks.map(t => t.owner).filter(Boolean))];
-            addOpts(fCat, cats, 'Категория');
-            addOpts(fOwn, owns, 'Исполнитель');
-            addOpts(fStat, HARDCODED_STATUSES, 'Статус');
+            addOpts(fCat, cats, 'Все категории');
+            addOpts(fOwn, owns, 'Все исполнители');
+            addOpts(fStat, HARDCODED_STATUSES, 'Все статусы');
         }
 
         function applyFilters() {
@@ -178,7 +174,6 @@
             applyFilters();
         };
 
-        // --- РЕНДЕР И СОРТИРОВКА ---
         function getWeekInfo(dateStr) {
             const d = new Date(dateStr);
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -197,30 +192,31 @@
             blockL.innerHTML = '';
             blockO.innerHTML = '';
             
+            // ИСПРАВЛЕНИЕ: Локальная дата для сравнения
             const todayDate = new Date();
             todayDate.setHours(0,0,0,0);
-            const todayStr = todayDate.toISOString().slice(0, 10);
+            const localTodayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth()+1).padStart(2,'0')}-${String(todayDate.getDate()).padStart(2,'0')}`;
 
-            // УМНАЯ СОРТИРОВКА
+            // СОРТИРОВКА: 1. Просроченные вверх 2. Ожидание вниз 3. Чем раньше дата, тем выше
             tasks.sort((a, b) => {
-                // 1. Ожидание всегда в самом низу
+                const dA = a.deadline ? new Date(a.deadline) : new Date(8640000000000000); 
+                const dB = b.deadline ? new Date(b.deadline) : new Date(8640000000000000);
+                dA.setHours(0,0,0,0); dB.setHours(0,0,0,0);
+
+                const aOverdue = dA < todayDate && a.status !== 'Завершено';
+                const bOverdue = dB < todayDate && b.status !== 'Завершено';
+
+                // Сначала просроченные
+                if (aOverdue && !bOverdue) return -1;
+                if (!aOverdue && bOverdue) return 1;
+
+                // Затем Ожидание в самый низ
                 const aWait = a.status === 'Ожидание';
                 const bWait = b.status === 'Ожидание';
                 if (aWait && !bWait) return 1;
                 if (!aWait && bWait) return -1;
 
-                const dA = a.deadline ? new Date(a.deadline) : new Date(8640000000000000); // Infinity fallback
-                const dB = b.deadline ? new Date(b.deadline) : new Date(8640000000000000);
-                dA.setHours(0,0,0,0); dB.setHours(0,0,0,0);
-
-                // 2. Просроченные наверх
-                const aOverdue = dA < todayDate && a.status !== 'Завершено';
-                const bOverdue = dB < todayDate && b.status !== 'Завершено';
-
-                if (aOverdue && !bOverdue) return -1;
-                if (!aOverdue && bOverdue) return 1;
-
-                // 3. Остальные сортируются по дедлайну (чем раньше, тем выше)
+                // Внутри групп - сортировка по дате (чем раньше, тем выше)
                 return dA.getTime() - dB.getTime();
             });
 
@@ -233,13 +229,15 @@
                 card.className = 'task-card';
                 card.onclick = () => openModal(t); 
 
+                // Обводка из гугл таблицы
                 if(t.color) card.style.border = `3px solid ${t.color}`;
                 
                 const deadlineDate = t.deadline ? new Date(t.deadline) : null;
                 if(deadlineDate) deadlineDate.setHours(0,0,0,0);
 
-                const isOverdue = deadlineDate && deadlineDate < todayDate && t.status !== 'Завершено';
-                if(isOverdue) card.classList.add('overdue-card');
+                // Просрочка
+                const isOverdue = deadlineDate && deadlineDate < todayDate && t.status !== 'Завершено' && t.status !== 'Неактуально';
+                if(isOverdue) card.classList.add('overdue-card'); // Красная обводка перебьет гугловскую из-за !important
 
                 let sClass = '';
                 if(t.status === 'Запланировано') sClass = 'status-planned';
@@ -258,20 +256,19 @@
                     <div class="quick-complete" title="Завершить" onclick="fastComplete(event, ${t.id})">✔</div>
                 `;
 
-                // РАСПРЕДЕЛЕНИЕ ПО БЛОКАМ
+                // ЛОГИКА РАСПРЕДЕЛЕНИЯ (Исправлено)
                 if (!t.deadline) {
-                    noDateTasks.push(card);
-                } else if (t.deadline === todayStr) {
-                    todayTasks.push(card);
+                    noDateTasks.push(card); // Без даты -> Блок Л
+                } else if (t.deadline === localTodayStr) {
+                    todayTasks.push(card); // Сегодня -> Блок Л
                 } else {
-                    // Все остальные задачи (включая просроченные) идут в недельные колонки
+                    // ВСЕ ОСТАЛЬНЫЕ (Просроченные и Будущие) -> Недели (Блок О)
                     const w = getWeekInfo(t.deadline);
                     if(!weeks[w.week]) weeks[w.week] = { title: w.text, cards: [] };
                     weeks[w.week].cards.push(card);
                 }
             });
 
-            // Рендер Блока L (Только Сегодня и Без Даты)
             const appendSection = (title, cardsArr) => {
                 if (cardsArr.length === 0) return;
                 const sec = document.createElement('div');
@@ -283,13 +280,14 @@
                 blockL.appendChild(sec);
             };
 
+            // В Блок Л рисуем ТОЛЬКО Сегодня и Без даты
             appendSection('Сегодня', todayTasks);
             appendSection('Без даты', noDateTasks);
 
             if(blockL.innerHTML === '') blockL.style.display = 'none';
             else blockL.style.display = 'block';
 
-            // Рендер Недель
+            // Недели
             Object.keys(weeks).sort((a,b)=>a-b).forEach(wk => {
                 const col = document.createElement('div'); col.className = 'task-column';
                 col.innerHTML = `<h2 class="column-title">${weeks[wk].title}</h2><div class="task-list"></div>`;
