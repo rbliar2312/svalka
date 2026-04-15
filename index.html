@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Свалка</title>
-    <!-- ИКОНКА ВОССТАНОВЛЕНА -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #1a1a1a; color: #e0e0e0; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
@@ -25,14 +24,12 @@
         .column-title { color: #ffa500; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; }
         .task-list { display: flex; flex-direction: column; gap: 10px; }
         
-        /* КАРТОЧКА: box-sizing исправляет вылезание за края */
         .task-card { box-sizing: border-box; background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border: 4px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
         .task-card:hover { transform: translateY(-2px); }
         .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; padding-right: 20px;}
         .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
         
-        /* Просроченная карточка: бледно-красный фон */
-        .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; }
+        .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; border-color: #ff6b6b !important; }
         .overdue-card h3 { color: #ffcccc !important; }
         .overdue-card p { color: #e0e0e0 !important; }
         .overdue-card .owner-tag { background: #555 !important; color: #fff !important; }
@@ -105,7 +102,7 @@
     </div>
 
     <script>
-        // ТВОЙ URL РАЗВЕРТЫВАНИЯ
+        // ВАЖНО: ВСТАВЬ СЮДА СВОЙ URL
         const API_URL = 'https://script.google.com/macros/s/AKfycbwmwzgjyy6jh0r679XUo86Kj1Bc_Ijta_74mDuvTETeE0SYi003_pTinujYuimvt2z64A/exec'; 
 
         const HARDCODED_STATUSES = ['Запланировано', 'В работе', 'Ожидание', 'Завершено', 'Неактуально'];
@@ -151,9 +148,9 @@
             };
             const cats = [...new Set(mockTasks.map(t => t.category).filter(Boolean))];
             const owns = [...new Set(mockTasks.map(t => t.owner).filter(Boolean))];
-            addOpts(fCat, cats, 'Категория');
-            addOpts(fOwn, owns, 'Исполнитель');
-            addOpts(fStat, HARDCODED_STATUSES, 'Статус');
+            addOpts(fCat, cats, 'Все категории');
+            addOpts(fOwn, owns, 'Все исполнители');
+            addOpts(fStat, HARDCODED_STATUSES, 'Все статусы');
         }
 
         function applyFilters() {
@@ -178,7 +175,6 @@
             applyFilters();
         };
 
-        // Жесткий и надежный парсер дат, чтобы избежать багов часовых поясов
         function parseDateString(dateStr) {
             if (!dateStr) return null;
             const p = dateStr.split('-');
@@ -205,29 +201,32 @@
             
             const todayDate = new Date();
             todayDate.setHours(0,0,0,0);
-            const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth()+1).padStart(2,'0')}-${String(todayDate.getDate()).padStart(2,'0')}`;
+            const localTodayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth()+1).padStart(2,'0')}-${String(todayDate.getDate()).padStart(2,'0')}`;
 
-            // УМНАЯ СОРТИРОВКА (Тир 1 - Просрочено, Тир 2 - Норма, Тир 3 - Ожидание)
-            function getTaskTier(t) {
-                if (t.status === 'Ожидание') return 3; 
-                const d = parseDateString(t.deadline);
-                if (d && d < todayDate && t.status !== 'Завершено' && t.status !== 'Неактуально') return 1;
-                return 2; 
-            }
-
+            // --- СОРТИРОВКА (как заказывал: просроченные наверх, ожидание вниз, остальное по дате) ---
             tasks.sort((a, b) => {
-                const tierA = getTaskTier(a);
-                const tierB = getTaskTier(b);
-                if (tierA !== tierB) return tierA - tierB; 
-                
                 const dA = parseDateString(a.deadline) ? parseDateString(a.deadline).getTime() : Infinity;
                 const dB = parseDateString(b.deadline) ? parseDateString(b.deadline).getTime() : Infinity;
+
+                const aOverdue = dA < todayDate.getTime() && a.status !== 'Завершено' && a.status !== 'Неактуально';
+                const bOverdue = dB < todayDate.getTime() && b.status !== 'Завершено' && b.status !== 'Неактуально';
+
+                // 1. Ожидание в самый низ
+                const aWait = a.status === 'Ожидание';
+                const bWait = b.status === 'Ожидание';
+                if (aWait && !bWait) return 1;
+                if (!aWait && bWait) return -1;
+
+                // 2. Просроченные на самый верх
+                if (aOverdue && !bOverdue) return -1;
+                if (!aOverdue && bOverdue) return 1;
+
+                // 3. Остальные по дате дедлайна (чем раньше, тем выше)
                 return dA - dB;
             });
 
             const todayTasks = [];
             const noDateTasks = [];
-            const overdueTasks = [];
             const weeks = {};
 
             tasks.forEach(t => {
@@ -235,11 +234,11 @@
                 card.className = 'task-card';
                 card.onclick = () => openModal(t); 
 
-                // Толстая полная обводка
                 if(t.color) card.style.borderColor = t.color;
                 
                 const deadlineDate = parseDateString(t.deadline);
-                const isOverdue = deadlineDate && deadlineDate < todayDate && t.status !== 'Завершено' && t.status !== 'Неактуально';
+                const isOverdue = deadlineDate && deadlineDate.getTime() < todayDate.getTime() && t.status !== 'Завершено' && t.status !== 'Неактуально';
+                
                 if(isOverdue) card.classList.add('overdue-card');
 
                 let sClass = '';
@@ -259,38 +258,37 @@
                     <div class="quick-complete" title="Завершить" onclick="fastComplete(event, ${t.id})">✔</div>
                 `;
 
-                // ЛОГИКА РАСПРЕДЕЛЕНИЯ (Блок Л: Сегодня -> Просрочено -> Без даты)
+                // --- ЛОГИКА РАСПРЕДЕЛЕНИЯ (Исправлено) ---
                 if (!t.deadline) {
-                    noDateTasks.push(card);
-                } else if (isOverdue) {
-                    overdueTasks.push(card);
-                } else if (t.deadline === todayStr) {
-                    todayTasks.push(card);
+                    noDateTasks.push(card); // Без даты идет в левый блок
+                } else if (t.deadline === localTodayStr) {
+                    todayTasks.push(card); // Сегодня идет в левый блок
                 } else {
+                    // ВСЕ ОСТАЛЬНЫЕ (и просроченные, и будущие) ИДУТ В НЕДЕЛИ
                     const w = getWeekInfo(t.deadline);
                     if(!weeks[w.week]) weeks[w.week] = { title: w.text, cards: [] };
                     weeks[w.week].cards.push(card);
                 }
             });
 
-            // Рендер Блока L без ограничивающих классов
             const appendSection = (title, cardsArr) => {
                 if (cardsArr.length === 0) return;
                 const sec = document.createElement('div');
-                sec.style.marginBottom = '25px'; // Просто отступ, без жесткой ширины
+                sec.style.marginBottom = '25px';
                 sec.innerHTML = `<h2 class="column-title">${title}</h2><div class="task-list"></div>`;
                 const list = sec.querySelector('.task-list');
                 cardsArr.forEach(c => list.appendChild(c));
                 blockL.appendChild(sec);
             };
 
+            // В левом блоке ТОЛЬКО Сегодня и Без даты
             appendSection('Сегодня', todayTasks);
-            appendSection('Просрочено', overdueTasks);
             appendSection('Без даты', noDateTasks);
 
             if(blockL.innerHTML === '') blockL.style.display = 'none';
             else blockL.style.display = 'block';
 
+            // Отрисовка недель (Блок О)
             Object.keys(weeks).sort((a,b)=>a-b).forEach(wk => {
                 const col = document.createElement('div'); col.className = 'task-column';
                 col.innerHTML = `<h2 class="column-title">${weeks[wk].title}</h2><div class="task-list"></div>`;
