@@ -6,24 +6,44 @@
     <title>Свалка</title>
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #1a1a1a; color: #e0e0e0; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        #block-v { padding: 15px 25px; background-color: #2a2a2a; margin-bottom: 15px; }
+        #block-v { padding: 15px 25px; background-color: #2a2a2a; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         #block-v .title { margin: 0; font-size: 2em; color: #ffa500; }
+        
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filter-dropdown, .filter-button { padding: 8px 12px; border: 1px solid #444; border-radius: 5px; background-color: #333; color: #e0e0e0; cursor: pointer; }
+        .filter-button:hover, .filter-dropdown:hover { background-color: #444; }
+        
         #main-board { display: flex; flex-grow: 1; padding: 0 15px 15px; gap: 25px; overflow-x: auto; }
         #block-l { flex-shrink: 0; width: 280px; padding-right: 25px; border-right: 1px solid rgba(255,255,255,0.1); }
         #block-o-container { display: flex; gap: 15px; }
         .task-column { background-color: #2a2a2a; border-radius: 8px; padding: 10px; width: 320px; flex-shrink: 0; max-height: calc(100vh - 120px); overflow-y: auto; }
         .column-title { color: #ffa500; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; }
         .task-list { display: flex; flex-direction: column; gap: 10px; }
-        .task-card { background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border-left: 5px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; }
-        .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
-        .fab { position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px; background-color: #ffa500; color: #1a1a1a; border: none; border-radius: 50%; font-size: 2.5em; cursor: pointer; }
         
+        /* Карточка задачи */
+        .task-card { background-color: #f8f8f8; border-radius: 6px; padding: 12px; color: #333; border-left: 5px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.3); position: relative; cursor: pointer; transition: transform 0.2s; }
+        .task-card:hover { transform: translateY(-2px); }
+        .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; padding-right: 20px;}
+        .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
+        
+        /* Бледные статусы */
+        .status-planned { color: #8ab4f8; font-weight: bold; } /* Бледно-синий */
+        .status-progress { color: #81c995; font-weight: bold; } /* Бледно-зеленый */
+        .status-waiting { color: #f28b82; font-weight: bold; } /* Бледно-красный */
+        .owner-tag { background: #e0e0e0; padding: 2px 6px; border-radius: 4px; display: inline-block; font-size: 0.8em !important; color: #333 !important; }
+
+        /* Галочка завершения */
+        .quick-complete { position: absolute; bottom: 10px; right: 10px; background: #ddd; color: #fff; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; cursor: pointer; transition: background 0.2s; font-size: 14px; }
+        .quick-complete:hover { background: #81c995; }
+
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px; background-color: #ffa500; color: #1a1a1a; border: none; border-radius: 50%; font-size: 2.5em; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+        
+        /* Модалка */
         .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-content { background-color: #2a2a2a; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; position: relative; }
         .modal-content label { display: block; margin-bottom: 5px; color: #e0e0e0; }
         .modal-content input, .modal-content select, .modal-content textarea { width: calc(100% - 20px); padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background-color: #333; color: #fff; }
-        .modal-content button { padding: 10px 20px; background-color: #ffa500; border: none; border-radius: 5px; cursor: pointer; color: #1a1a1a; font-size: 1em; }
+        .modal-content button { padding: 10px 20px; background-color: #ffa500; border: none; border-radius: 5px; cursor: pointer; color: #1a1a1a; }
         .close-button { position: absolute; top: 10px; right: 15px; color: #aaa; font-size: 28px; cursor: pointer; }
         .auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 300; }
         .auth-screen input { padding: 12px; font-size: 1.1em; border-radius: 5px; margin-bottom: 15px; }
@@ -38,7 +58,15 @@
     </div>
 
     <div id="main-content" class="hidden">
-        <header id="block-v"><h1 class="title">СВАЛКА</h1></header>
+        <header id="block-v">
+            <div class="filters">
+                <select id="filter-category" class="filter-dropdown"><option value="">Все категории</option></select>
+                <select id="filter-status" class="filter-dropdown"><option value="">Все статусы</option></select>
+                <select id="filter-owner" class="filter-dropdown"><option value="">Все исполнители</option></select>
+                <button id="filter-reset" class="filter-button">Сбросить</button>
+            </div>
+            <h1 class="title">СВАЛКА</h1>
+        </header>
         <div id="main-board">
             <aside id="block-l" class="task-column">
                 <h2 class="column-title">Сегодня</h2>
@@ -53,8 +81,9 @@
         <div id="task-modal" class="modal">
             <div class="modal-content">
                 <span class="close-button" id="close-modal">&times;</span>
-                <h2>Создать задачу</h2>
+                <h2 id="modal-title">Создать задачу</h2>
                 <form id="task-form">
+                    <input type="hidden" id="t-id">
                     <label>Задача:</label> <input type="text" id="t-title" required>
                     <label>Эпик:</label> <select id="t-epic"></select>
                     <label>Категория:</label> <select id="t-category"></select>
@@ -63,19 +92,23 @@
                     <label>Дата начала:</label> <input type="date" id="t-start">
                     <label>Дедлайн:</label> <input type="date" id="t-dead">
                     <label>Комментарий:</label> <textarea id="t-comment" rows="3"></textarea>
-                    <button type="submit">Сохранить</button>
+                    <button type="submit" id="save-btn">Сохранить</button>
                 </form>
             </div>
         </div>
     </div>
 
     <script>
-        // ВАЖНО: ВСТАВЬ СЮДА НОВЫЙ URL ПОСЛЕ РАЗВЕРТЫВАНИЯ
+        // !!! ВСТАВЬ СЮДА НОВЫЙ URL ОТ APPS SCRIPT !!!
         const API_URL = 'https://script.google.com/macros/s/AKfycbwmwzgjyy6jh0r679XUo86Kj1Bc_Ijta_74mDuvTETeE0SYi003_pTinujYuimvt2z64A/exec'; 
+
+        // Вшитые статусы
+        const HARDCODED_STATUSES = ['Запланировано', 'В работе', 'Ожидание', 'Завершено', 'Неактуально'];
 
         const authScreen = document.getElementById('auth-screen');
         const mainContent = document.getElementById('main-content');
-        let settings = { epics: [], categories: [], statuses: [] };
+        let settings = { epics: [], categories: [] };
+        let mockTasks = [];
 
         document.getElementById('login-button').onclick = () => {
             if(document.getElementById('password-input').value === "4444") {
@@ -87,28 +120,71 @@
 
         async function loadData() {
             try {
-                // Грузим настройки
                 const resSet = await fetch(API_URL + '?action=getSettings');
                 const dataSet = await resSet.json();
                 if(!dataSet.error) settings = dataSet;
 
-                // Грузим задачи
                 const resTask = await fetch(API_URL);
                 const dataTask = await resTask.json();
-                if(!dataTask.error) render(dataTask);
+                if(!dataTask.error) {
+                    mockTasks = dataTask;
+                    populateFilters();
+                    applyFilters();
+                }
             } catch(e) { console.error(e); }
         }
 
+        // --- ФИЛЬТРЫ ---
+        const fCat = document.getElementById('filter-category');
+        const fStat = document.getElementById('filter-status');
+        const fOwn = document.getElementById('filter-owner');
+
+        function populateFilters() {
+            const addOpts = (el, arr) => {
+                el.innerHTML = '<option value="">Все</option>';
+                arr.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
+            };
+            const cats = [...new Set(mockTasks.map(t => t.category).filter(Boolean))];
+            const owns = [...new Set(mockTasks.map(t => t.owner).filter(Boolean))];
+            addOpts(fCat, cats);
+            addOpts(fOwn, owns);
+            addOpts(fStat, HARDCODED_STATUSES);
+        }
+
+        function applyFilters() {
+            let filtered = mockTasks.filter(t => {
+                // Исключаем Завершено и Неактуально по умолчанию
+                const isHiddenStatus = t.status === 'Завершено' || t.status === 'Неактуально' || t.status === 'Не актуально';
+                // Если статус выбран в фильтре жестко - показываем, иначе скрываем закрытые
+                if (fStat.value === '') {
+                    if (isHiddenStatus) return false;
+                }
+                
+                if (fCat.value && t.category !== fCat.value) return false;
+                if (fStat.value && t.status !== fStat.value) return false;
+                if (fOwn.value && t.owner !== fOwn.value) return false;
+                return true;
+            });
+            render(filtered);
+        }
+
+        fCat.onchange = applyFilters;
+        fStat.onchange = applyFilters;
+        fOwn.onchange = applyFilters;
+        document.getElementById('filter-reset').onclick = () => {
+            fCat.value = ''; fStat.value = ''; fOwn.value = '';
+            applyFilters();
+        };
+
+        // --- РЕНДЕР ---
         function getWeekInfo(dateStr) {
             const d = new Date(dateStr);
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
             const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
             const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-            
             const jan4 = new Date(d.getFullYear(), 0, 4);
             const start = new Date(jan4.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (weekNo - 1) * 7));
             const end = new Date(start); end.setDate(end.getDate() + 6);
-            
             const f = dt => dt.toISOString().slice(0,10).split('-').reverse().join('.');
             return { week: weekNo, text: `Неделя ${weekNo} (${f(start)} - ${f(end)})` };
         }
@@ -124,10 +200,27 @@
             tasks.forEach(t => {
                 const card = document.createElement('div');
                 card.className = 'task-card';
+                // Клик по карточке открывает редактирование
+                card.onclick = () => openModal(t);
+
                 if(t.color) card.style.borderLeftColor = t.color;
                 
+                let sClass = '';
+                if(t.status === 'Запланировано') sClass = 'status-planned';
+                if(t.status === 'В работе') sClass = 'status-progress';
+                if(t.status === 'Ожидание') sClass = 'status-waiting';
+
                 const deadFormat = t.deadline ? t.deadline.split('-').reverse().join('.') : '---';
-                card.innerHTML = `<h3>${t.title}</h3><p>${t.category}</p><p><b>${t.status}</b></p><p>Дедлайн: ${deadFormat}</p>`;
+                const ownerHtml = (t.owner && t.owner !== 'Я') ? `<p class="owner-tag">${t.owner}</p>` : '';
+
+                card.innerHTML = `
+                    <h3>${t.title}</h3>
+                    <p>${t.category}</p>
+                    <p><span class="${sClass}">${t.status}</span></p>
+                    <p>Дедлайн: ${deadFormat}</p>
+                    ${ownerHtml}
+                    <div class="quick-complete" title="Завершить" onclick="fastComplete(event, ${t.id})">✔</div>
+                `;
 
                 if (!t.deadline) {
                     document.getElementById('tasks-no-date').appendChild(card);
@@ -148,36 +241,79 @@
             });
         }
 
-        // Модалка
+        // --- БЫСТРОЕ ЗАВЕРШЕНИЕ ---
+        window.fastComplete = async function(event, id) {
+            event.stopPropagation(); // Чтобы не открылась модалка
+            const task = mockTasks.find(t => t.id === id);
+            if (!task) return;
+            task.status = 'Завершено';
+            applyFilters(); // Сразу скрываем из интерфейса (UX)
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'update', task: task}) });
+            } catch(e) { alert('Ошибка сети'); }
+        };
+
+        // --- МОДАЛКА ---
         const modal = document.getElementById('task-modal');
-        document.getElementById('block-plus').onclick = () => {
+        
+        function openModal(task = null) {
             document.getElementById('task-form').reset();
+            const titleEl = document.getElementById('modal-title');
             
             const pop = (id, arr) => {
                 const el = document.getElementById(id);
-                el.innerHTML = '';
+                el.innerHTML = '<option value="">Выбрать</option>';
                 arr.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
             };
             pop('t-epic', settings.epics);
             pop('t-category', settings.categories);
-            pop('t-status', settings.statuses);
+            pop('t-status', HARDCODED_STATUSES);
 
-            const today = new Date().toISOString().slice(0, 10);
-            document.getElementById('t-start').value = today;
-            document.getElementById('t-dead').value = today;
-            document.getElementById('t-owner').value = "Я";
-
+            if (task) {
+                // РЕДАКТИРОВАНИЕ
+                titleEl.textContent = "Редактировать задачу";
+                document.getElementById('t-id').value = task.id;
+                document.getElementById('t-title').value = task.title || '';
+                document.getElementById('t-epic').value = task.epic || '';
+                document.getElementById('t-category').value = task.category || '';
+                document.getElementById('t-status').value = task.status || '';
+                document.getElementById('t-owner').value = task.owner || '';
+                document.getElementById('t-start').value = task.startDate || '';
+                document.getElementById('t-dead').value = task.deadline || '';
+                document.getElementById('t-comment').value = task.comment || '';
+            } else {
+                // СОЗДАНИЕ
+                titleEl.textContent = "Создать задачу";
+                document.getElementById('t-id').value = '';
+                
+                const todayLocal = new Date();
+                const tmrLocal = new Date();
+                tmrLocal.setDate(tmrLocal.getDate() + 1); // Дедлайн + 1 день
+                
+                const fDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                
+                document.getElementById('t-start').value = fDate(todayLocal);
+                document.getElementById('t-dead').value = fDate(tmrLocal);
+                document.getElementById('t-owner').value = "Я";
+                
+                document.getElementById('t-epic').value = settings.epics[0] || '';
+                document.getElementById('t-category').value = settings.categories[0] || '';
+                document.getElementById('t-status').value = HARDCODED_STATUSES[0];
+            }
             modal.style.display = 'flex';
-        };
-        
+        }
+
+        document.getElementById('block-plus').onclick = () => openModal();
         document.getElementById('close-modal').onclick = () => modal.style.display = 'none';
 
         document.getElementById('task-form').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
+            const btn = document.getElementById('save-btn');
             btn.disabled = true; btn.textContent = 'Сохранение...';
 
-            const newTask = {
+            const idVal = document.getElementById('t-id').value;
+            const taskData = {
+                id: idVal ? parseInt(idVal) : null,
                 title: document.getElementById('t-title').value,
                 epic: document.getElementById('t-epic').value,
                 category: document.getElementById('t-category').value,
@@ -188,10 +324,12 @@
                 comment: document.getElementById('t-comment').value
             };
 
+            const actionType = idVal ? 'update' : 'create';
+
             try {
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'create', task: newTask}) });
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: actionType, task: taskData}) });
                 modal.style.display = 'none';
-                loadData(); // Обновляем доску
+                loadData(); // Перезагружаем данные с сервера
             } catch(err) { alert('Ошибка сохранения'); }
             
             btn.disabled = false; btn.textContent = 'Сохранить';
