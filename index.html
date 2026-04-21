@@ -66,22 +66,24 @@
         @media (max-width: 768px) {
             #block-v { flex-direction: column; align-items: flex-start; gap: 10px; }
             .filters { width: 100%; }
-            #filter-epic, #filter-reset { width: 100%; box-sizing: border-box; }
+            #filter-epic { width: 100%; box-sizing: border-box; }
             
-            /* Скрываем все фильтры, кроме Эпика и Сброса */
-            #filter-category, #filter-status, #filter-owner, .filter-checkbox-label {
+            /* Скрываем все фильтры, кроме Эпика и Мои */
+            #filter-category, #filter-status, #filter-owner, #filter-reset {
                 display: none;
             }
+            .filter-checkbox-label { width: 100%; box-sizing: border-box; } /* Убеждаемся, что "Мои" тоже занимает всю ширину */
 
             #main-board { flex-direction: column; }
             #block-l, .task-column { width: 100%; box-sizing: border-box; max-height: none; }
             #block-l { padding-right: 0; border-right: none; }
             
-            /* Упрощаем карточку задачи, оставляем только название */
-            .task-card p, .task-card .quick-complete {
-                display: none;
+            /* Упрощаем карточку задачи, оставляем только название. Галочка возвращена. */
+            .task-card p {
+                display: none; /* Скрываем все параграфы */
             }
             .task-card h3 { margin-bottom: 0; }
+            /* .task-card .quick-complete { display: block; } /* Галочка теперь всегда видна */
         }
     </style>
 </head>
@@ -101,7 +103,7 @@
                 <label class="filter-checkbox-label">
                     <input type="checkbox" id="filter-my"> Мои
                 </label>
-                <button id="filter-reset" class="filter-button">Сбросить</button>
+                <!-- Кнопка "Сбросить" удалена -->
             </div>
             <h1 class="title">СВАЛКА</h1>
         </header>
@@ -146,7 +148,7 @@
     </div>
 
     <script>
-        // ВСТАВЬ СЮДА СВОЙ URL, ЕСЛИ МЕНЯЛ
+        // ТВОЙ URL РАЗВЕРТЫВАНИЯ (если менял)
         const API_URL = 'https://script.google.com/macros/s/AKfycbwmwzgjyy6jh0r679XUo86Kj1Bc_Ijta_74mDuvTETeE0SYi003_pTinujYuimvt2z64A/exec'; 
 
         const HARDCODED_STATUSES = ['Запланировано', 'В работе', 'Ожидание', 'Завершено', 'Неактуально'];
@@ -234,10 +236,11 @@
         fStat.onchange = applyFilters;
         fOwn.onchange = applyFilters;
         fMy.onchange = applyFilters;
-        document.getElementById('filter-reset').onclick = () => {
-            fEpic.value = ''; fCat.value = ''; fStat.value = ''; fOwn.value = ''; fMy.checked = false;
-            applyFilters();
-        };
+        // Удален обработчик для кнопки "Сбросить"
+        // document.getElementById('filter-reset').onclick = () => {
+        //     fEpic.value = ''; fCat.value = ''; fStat.value = ''; fOwn.value = ''; fMy.checked = false;
+        //     applyFilters();
+        // };
 
         function parseDateString(dateStr) {
             if (!dateStr) return null;
@@ -271,14 +274,18 @@
             tasks.sort((a, b) => {
                 const dA = parseDateString(a.deadline) ? parseDateString(a.deadline).getTime() : Infinity;
                 const dB = parseDateString(b.deadline) ? parseDateString(b.deadline).getTime() : Infinity;
+
                 const aOverdue = dA < todayDate.getTime() && a.status !== 'Завершено' && a.status !== 'Неактуально';
                 const bOverdue = dB < todayDate.getTime() && b.status !== 'Завершено' && b.status !== 'Неактуально';
+
                 if (aOverdue && !bOverdue) return -1;
                 if (!aOverdue && bOverdue) return 1;
+
                 const aWait = a.status === 'Ожидание';
                 const bWait = b.status === 'Ожидание';
                 if (aWait && !bWait) return 1;
                 if (!aWait && bWait) return -1;
+
                 return dA - dB;
             });
 
@@ -308,10 +315,10 @@
 
                 card.innerHTML = `
                     <h3>${t.title}</h3>
-                    <p>${t.category}</p>
-                    <p><span class="${sClass}">${t.status}</span></p>
-                    <p>Дедлайн: ${deadFormat}</p>
-                    ${ownerHtml}
+                    <p class="desktop-only">${t.category}</p>
+                    <p class="desktop-only"><span class="${sClass}">${t.status}</span></p>
+                    <p class="desktop-only">Дедлайн: ${deadFormat}</p>
+                    ${ownerHtml ? `<p class="desktop-only">${ownerHtml}</p>` : ''}
                     <div class="quick-complete" title="Завершить" onclick="fastComplete(event, ${t.id})">✔</div>
                 `;
 
