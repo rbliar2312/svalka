@@ -19,7 +19,8 @@
 
         #main-board { display: flex; flex-grow: 1; padding: 0 15px 15px; gap: 25px; overflow-x: auto; }
         #block-l { flex-shrink: 0; width: 280px; padding-right: 25px; border-right: 1px solid rgba(255,255,255,0.1); }
-        #block-o-container { display: flex; gap: 15px; }
+        /* ИСПРАВЛЕНИЕ СКРОЛЛА */
+        #block-o-container { display: flex; gap: 15px; min-width: 0; }
         .task-column { background-color: #2a2a2a; border-radius: 8px; padding: 10px; width: 320px; flex-shrink: 0; max-height: calc(100vh - 120px); overflow-y: auto; }
         .column-title { color: #ffa500; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; }
         .task-list { display: flex; flex-direction: column; gap: 10px; }
@@ -29,7 +30,8 @@
         .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; padding-right: 20px;}
         .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
         
-        .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; border-color: #ff6b6b !important; }
+        /* Просроченная карточка: только фон, рамка сохраняется */
+        .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; }
         .overdue-card h3 { color: #ffcccc !important; }
         .overdue-card p { color: #e0e0e0 !important; }
         .overdue-card .owner-tag { background: #555 !important; color: #fff !important; }
@@ -47,9 +49,13 @@
         .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-content { background-color: #2a2a2a; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; position: relative; }
         .modal-content label { display: block; margin-bottom: 5px; color: #e0e0e0; }
-        .modal-content input, .modal-content select, .modal-content textarea { width: calc(100% - 20px); padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background-color: #333; color: #fff; box-sizing: border-box; }
+        .modal-content input, .modal-content select, .modal-content textarea { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background-color: #333; color: #fff; box-sizing: border-box; }
         .time-row { display: flex; gap: 10px; }
         .time-row div { flex: 1; }
+
+        /* Сворачиваемый блок */
+        details { border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
+        summary { cursor: pointer; color: #ffa500; }
 
         .modal-content button { padding: 10px 20px; background-color: #ffa500; border: none; border-radius: 5px; cursor: pointer; color: #1a1a1a; }
         .close-button { position: absolute; top: 10px; right: 15px; color: #aaa; font-size: 28px; cursor: pointer; }
@@ -93,7 +99,6 @@
                 <form id="task-form">
                     <input type="hidden" id="t-id">
                     <label>Задача:</label> <input type="text" id="t-title" required>
-                    <label>Эпик:</label> <select id="t-epic"></select>
                     <label>Категория:</label> <select id="t-category"></select>
                     <label>Статус:</label> <select id="t-status"></select>
                     <label>Исполнитель:</label> <input type="text" id="t-owner">
@@ -106,8 +111,15 @@
                         <div><label>Время начала:</label> <input type="time" id="t-start-time"></div>
                         <div><label>Время конца:</label> <input type="time" id="t-end-time"></div>
                     </div>
-
-                    <label>Комментарий:</label> <textarea id="t-comment" rows="3"></textarea>
+                    
+                    <details>
+                        <summary>Дополнительно</summary>
+                        <div style="margin-top: 15px;">
+                            <label>Эпик:</label> <select id="t-epic"></select>
+                            <label>Комментарий:</label> <textarea id="t-comment" rows="3"></textarea>
+                        </div>
+                    </details>
+                    
                     <button type="submit" id="save-btn">Сохранить</button>
                 </form>
             </div>
@@ -115,7 +127,7 @@
     </div>
 
     <script>
-        // ВСТАВЬ НОВЫЙ URL РАЗВЕРТЫВАНИЯ
+        // ТВОЙ URL РАЗВЕРТЫВАНИЯ (если менял)
         const API_URL = 'https://script.google.com/macros/s/AKfycbwmwzgjyy6jh0r679XUo86Kj1Bc_Ijta_74mDuvTETeE0SYi003_pTinujYuimvt2z64A/exec'; 
 
         const HARDCODED_STATUSES = ['Запланировано', 'В работе', 'Ожидание', 'Завершено', 'Неактуально'];
@@ -126,7 +138,7 @@
         let mockTasks = [];
 
         document.getElementById('login-button').onclick = () => {
-            if(document.getElementById('password-input').value === "4444") {
+            if(document.getElementById('password-input').value === "4") {
                 authScreen.classList.add('hidden');
                 mainContent.classList.remove('hidden');
                 loadData();
@@ -179,7 +191,6 @@
             let filtered = mockTasks.filter(t => {
                 const isHiddenStatus = t.status === 'Завершено' || t.status === 'Неактуально' || t.status === 'Не актуально';
                 if (fStat.value === '') { if (isHiddenStatus) return false; }
-                
                 if (fEpic.value && t.epic !== fEpic.value) return false;
                 if (fCat.value && t.category !== fCat.value) return false;
                 if (fStat.value && t.status !== fStat.value) return false;
@@ -214,8 +225,9 @@
             const jan4 = new Date(d.getFullYear(), 0, 4);
             const start = new Date(jan4.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (weekNo - 1) * 7));
             const end = new Date(start); end.setDate(end.getDate() + 6);
-            const f = dt => dt.toISOString().slice(0,10).split('-').reverse().join('.');
-            return { week: weekNo, text: `Неделя ${weekNo} (${f(start)} - ${f(end)})` };
+            
+            const fShort = dt => dt.toISOString().slice(5, 10).split('-').reverse().join('.');
+            return { week: weekNo, text: `${fShort(start)}-${fShort(end)} (${weekNo})` };
         }
 
         function render(tasks) {
@@ -350,6 +362,8 @@
                 document.getElementById('t-owner').value = task.owner || '';
                 document.getElementById('t-start').value = task.startDate || '';
                 document.getElementById('t-dead').value = task.deadline || '';
+                document.getElementById('t-start-time').value = task.startTime || '';
+                document.getElementById('t-end-time').value = task.endTime || '';
                 document.getElementById('t-comment').value = task.comment || '';
             } else {
                 titleEl.textContent = "Создать задачу";
@@ -363,6 +377,8 @@
                 
                 document.getElementById('t-start').value = fDate(todayLocal);
                 document.getElementById('t-dead').value = fDate(tmrLocal);
+                document.getElementById('t-start-time').value = '12:00';
+                document.getElementById('t-end-time').value = '12:30';
                 document.getElementById('t-owner').value = "Я";
                 
                 document.getElementById('t-epic').value = settings.epics[0] || '';
@@ -389,20 +405,4 @@
                 status: document.getElementById('t-status').value,
                 owner: document.getElementById('t-owner').value,
                 startDate: document.getElementById('t-start').value,
-                deadline: document.getElementById('t-dead').value,
-                comment: document.getElementById('t-comment').value
-            };
-
-            const actionType = idVal ? 'update' : 'create';
-
-            try {
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: actionType, task: taskData}) });
-                modal.style.display = 'none';
-                loadData(); 
-            } catch(err) { alert('Ошибка сохранения'); }
-            
-            btn.disabled = false; btn.textContent = 'Сохранить';
-        };
-    </script>
-</body>
-</html>
+                deadline: document.getElementById('t-dead').
