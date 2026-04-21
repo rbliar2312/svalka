@@ -19,7 +19,6 @@
 
         #main-board { display: flex; flex-grow: 1; padding: 0 15px 15px; gap: 25px; overflow-x: auto; }
         #block-l { flex-shrink: 0; width: 280px; padding-right: 25px; border-right: 1px solid rgba(255,255,255,0.1); }
-        /* ИСПРАВЛЕНИЕ СКРОЛЛА */
         #block-o-container { display: flex; gap: 15px; min-width: 0; }
         .task-column { background-color: #2a2a2a; border-radius: 8px; padding: 10px; width: 320px; flex-shrink: 0; max-height: calc(100vh - 120px); overflow-y: auto; }
         .column-title { color: #ffa500; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; }
@@ -30,7 +29,6 @@
         .task-card h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a1a1a; padding-right: 20px;}
         .task-card p { margin: 4px 0; font-size: 0.9em; color: #555; }
         
-        /* Просроченная карточка: только фон, рамка сохраняется */
         .overdue-card { background-color: #3b2a2a !important; color: #f8f8f8 !important; }
         .overdue-card h3 { color: #ffcccc !important; }
         .overdue-card p { color: #e0e0e0 !important; }
@@ -53,7 +51,6 @@
         .time-row { display: flex; gap: 10px; }
         .time-row div { flex: 1; }
 
-        /* Сворачиваемый блок */
         details { border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
         summary { cursor: pointer; color: #ffa500; }
 
@@ -64,6 +61,28 @@
         .auth-screen button { padding: 12px 30px; background-color: #ffa500; border: none; border-radius: 5px; cursor: pointer; }
         .hidden { display: none !important; }
         input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        /* --- АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ УСТРОЙСТВА --- */
+        @media (max-width: 768px) {
+            #block-v { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .filters { width: 100%; }
+            #filter-epic, #filter-reset { width: 100%; box-sizing: border-box; }
+            
+            /* Скрываем все фильтры, кроме Эпика и Сброса */
+            #filter-category, #filter-status, #filter-owner, .filter-checkbox-label {
+                display: none;
+            }
+
+            #main-board { flex-direction: column; }
+            #block-l, .task-column { width: 100%; box-sizing: border-box; max-height: none; }
+            #block-l { padding-right: 0; border-right: none; }
+            
+            /* Упрощаем карточку задачи, оставляем только название */
+            .task-card p, .task-card .quick-complete {
+                display: none;
+            }
+            .task-card h3 { margin-bottom: 0; }
+        }
     </style>
 </head>
 <body>
@@ -127,23 +146,33 @@
     </div>
 
     <script>
-        // ТВОЙ URL РАЗВЕРТЫВАНИЯ (если менял)
+        // ВСТАВЬ СЮДА СВОЙ URL, ЕСЛИ МЕНЯЛ
         const API_URL = 'https://script.google.com/macros/s/AKfycbwmwzgjyy6jh0r679XUo86Kj1Bc_Ijta_74mDuvTETeE0SYi003_pTinujYuimvt2z64A/exec'; 
 
         const HARDCODED_STATUSES = ['Запланировано', 'В работе', 'Ожидание', 'Завершено', 'Неактуально'];
 
         const authScreen = document.getElementById('auth-screen');
         const mainContent = document.getElementById('main-content');
+        const loginButton = document.getElementById('login-button');
+        const passwordInput = document.getElementById('password-input');
+        
         let settings = { epics: [], categories: [], catColors: {} };
         let mockTasks = [];
 
-        document.getElementById('login-button').onclick = () => {
-            if(document.getElementById('password-input').value === "4") {
+        function checkPassword() {
+            if (passwordInput.value === "4") {
                 authScreen.classList.add('hidden');
                 mainContent.classList.remove('hidden');
                 loadData();
-            } else alert('Неверный пароль');
-        };
+            } else {
+                alert('Неверный пароль');
+                passwordInput.value = '';
+            }
+        }
+        loginButton.addEventListener('click', checkPassword);
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
 
         async function loadData() {
             try {
@@ -181,7 +210,6 @@
             addOpts(fOwn, owns, 'Все исполнители');
             addOpts(fStat, HARDCODED_STATUSES, 'Все статусы');
             
-            // Фильтр по умолчанию на первый Эпик
             if(settings.epics && settings.epics.length > 0) {
               fEpic.value = settings.epics[0];
             }
@@ -243,18 +271,14 @@
             tasks.sort((a, b) => {
                 const dA = parseDateString(a.deadline) ? parseDateString(a.deadline).getTime() : Infinity;
                 const dB = parseDateString(b.deadline) ? parseDateString(b.deadline).getTime() : Infinity;
-
                 const aOverdue = dA < todayDate.getTime() && a.status !== 'Завершено' && a.status !== 'Неактуально';
                 const bOverdue = dB < todayDate.getTime() && b.status !== 'Завершено' && b.status !== 'Неактуально';
-
                 if (aOverdue && !bOverdue) return -1;
                 if (!aOverdue && bOverdue) return 1;
-
                 const aWait = a.status === 'Ожидание';
                 const bWait = b.status === 'Ожидание';
                 if (aWait && !bWait) return 1;
                 if (!aWait && bWait) return -1;
-
                 return dA - dB;
             });
 
