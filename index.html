@@ -405,4 +405,22 @@
                 status: document.getElementById('t-status').value,
                 owner: document.getElementById('t-owner').value,
                 startDate: document.getElementById('t-start').value,
-                deadline: document.getElementById('t-dead').
+                deadline: document.getElementById('t-dead').value,
+                startTime: document.getElementById('t-start-time').value,
+                endTime: document.getElementById('t-end-time').value,
+                comment: document.getElementById('t-comment').value
+            };
+
+            const actionType = idVal ? 'update' : 'create';
+
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: actionType, task: taskData}) });
+                modal.style.display = 'none';
+                loadData(); 
+            } catch(err) { alert('Ошибка сохранения'); }
+            
+            btn.disabled = false; btn.textContent = 'Сохранить';
+        };
+    </script>
+</body>
+</html>
